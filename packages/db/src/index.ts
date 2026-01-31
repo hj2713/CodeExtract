@@ -9,3 +9,7 @@ const client = createClient({
 });
 
 export const db = drizzle({ client, schema });
+
+// Re-export schema and operators for convenience
+export * from "./schema";
+export { eq, desc, asc, and, or, like } from "drizzle-orm";
