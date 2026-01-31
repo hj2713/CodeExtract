@@ -1,0 +1,7 @@
+# Ignore scaffolded apps (except .gitkeep)
+created-apps/*
+!created-apps/.gitkeep
+
+# Ignore logs (except .gitkeep)
+logs/*
+!logs/.gitkeep

@@ -1,1 +1,102 @@
-[]
+[
+  {
+    "id": "0f895bc5-8b99-4eed-8c43-f4f354ac0d4c",
+    "name": "hi",
+    "createdAt": "2026-01-31T20:32:35.011Z",
+    "status": "error",
+    "stepProgress": [
+      {
+        "stepId": "create-nextjs",
+        "status": "completed"
+      },
+      {
+        "stepId": "create-folders",
+        "status": "error",
+        "error": "spawn /bin/sh ENOENT"
+      },
+      {
+        "stepId": "clone-repo",
+        "status": "pending"
+      },
+      {
+        "stepId": "copy-templates",
+        "status": "pending"
+      }
+    ],
+    "error": "Error: spawn /bin/sh ENOENT"
+  },
+  {
+    "id": "7ee1941b-ec48-4462-99e4-661243ba4078",
+    "name": "testin",
+    "createdAt": "2026-01-31T20:51:37.469Z",
+    "status": "error",
+    "stepProgress": [
+      {
+        "stepId": "create-nextjs",
+        "status": "completed"
+      },
+      {
+        "stepId": "create-folders",
+        "status": "pending"
+      },
+      {
+        "stepId": "clone-repo",
+        "status": "pending"
+      },
+      {
+        "stepId": "copy-templates",
+        "status": "pending"
+      }
+    ],
+    "error": "TypeError [ERR_INVALID_STATE]: Invalid state: Controller is already closed"
+  },
+  {
+    "id": "43890f34-a99a-4f8d-9f32-9a2211d055ff",
+    "name": "hk",
+    "createdAt": "2026-01-31T20:59:09.471Z",
+    "status": "error",
+    "stepProgress": [
+      {
+        "stepId": "create-nextjs",
+        "status": "completed"
+      },
+      {
+        "stepId": "create-folders",
+        "status": "pending"
+      },
+      {
+        "stepId": "clone-repo",
+        "status": "pending"
+      },
+      {
+        "stepId": "copy-templates",
+        "status": "pending"
+      }
+    ],
+    "error": "TypeError [ERR_INVALID_STATE]: Invalid state: Controller is already closed"
+  },
+  {
+    "id": "4c1d4958-1978-4a0b-a80d-b4bbaf8687e3",
+    "name": "test2",
+    "createdAt": "2026-01-31T21:16:23.914Z",
+    "status": "ready",
+    "stepProgress": [
+      {
+        "stepId": "create-nextjs",
+        "status": "completed"
+      },
+      {
+        "stepId": "create-folders",
+        "status": "completed"
+      },
+      {
+        "stepId": "clone-repo",
+        "status": "completed"
+      },
+      {
+        "stepId": "copy-templates",
+        "status": "completed"
+      }
+    ]
+  }
+]

@@ -2,33 +2,22 @@
 
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
+import type {
+	Source,
+	CreateSourceInput,
+	UpdateSourceInput,
+	GithubMetadata,
+	RepoContent,
+	RepoInfo,
+} from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "src/app/partner/backwards/prototypes/crud-prompt-github");
+const SOURCES_FILE = path.join(DATA_DIR, "sources.json");
+const PROMPT_FILE = path.join(DATA_DIR, "prompt.md");
 
-export interface GithubEntry {
-	id: string;
-	url: string;
-	owner: string;
-	repo: string;
-	createdAt: string;
-}
-
-export interface RepoContent {
-	name: string;
-	path: string;
-	type: "file" | "dir";
-	size?: number;
-	sha: string;
-}
-
-export interface RepoInfo {
-	name: string;
-	full_name: string;
-	description: string | null;
-	stargazers_count: number;
-	forks_count: number;
-	default_branch: string;
-}
+// ============================================================================
+// Utility Functions
+// ============================================================================
 
 function parseGithubUrl(url: string): { owner: string; repo: string } | null {
 	try {
@@ -36,78 +25,227 @@ function parseGithubUrl(url: string): { owner: string; repo: string } | null {
 		if (parsed.hostname !== "github.com") return null;
 		const parts = parsed.pathname.split("/").filter(Boolean);
 		if (parts.length < 2) return null;
-		return { owner: parts[0], repo: parts[1] };
+		return { owner: parts[0], repo: parts[1].replace(/\.git$/, "") };
 	} catch {
 		return null;
 	}
 }
 
-export async function savePrompt(prompt: string): Promise<{ success: boolean; error?: string }> {
-	try {
-		const filePath = path.join(DATA_DIR, "prompt.md");
-		await writeFile(filePath, prompt, "utf-8");
-		return { success: true };
-	} catch (error) {
-		return { success: false, error: String(error) };
-	}
+function nowISO(): string {
+	return new Date().toISOString();
 }
 
-export async function saveGithubUrl(url: string): Promise<{
-	success: boolean;
-	entry?: GithubEntry;
-	error?: string;
-}> {
-	const parsed = parseGithubUrl(url);
-	if (!parsed) {
-		return { success: false, error: "Invalid GitHub URL" };
-	}
+// ============================================================================
+// JSON "Database" Layer - Replace with Drizzle calls later
+// ============================================================================
 
+async function readSources(): Promise<Source[]> {
 	try {
-		const filePath = path.join(DATA_DIR, "github-urls.json");
-		let entries: GithubEntry[] = [];
-
-		try {
-			const content = await readFile(filePath, "utf-8");
-			entries = JSON.parse(content);
-		} catch {
-			// File doesn't exist yet
-		}
-
-		const entry: GithubEntry = {
-			id: crypto.randomUUID(),
-			url,
-			owner: parsed.owner,
-			repo: parsed.repo,
-			createdAt: new Date().toISOString(),
-		};
-
-		entries.push(entry);
-		await writeFile(filePath, JSON.stringify(entries, null, 2), "utf-8");
-
-		return { success: true, entry };
-	} catch (error) {
-		return { success: false, error: String(error) };
-	}
-}
-
-export async function getGithubEntries(): Promise<GithubEntry[]> {
-	try {
-		const filePath = path.join(DATA_DIR, "github-urls.json");
-		const content = await readFile(filePath, "utf-8");
+		const content = await readFile(SOURCES_FILE, "utf-8");
 		return JSON.parse(content);
 	} catch {
 		return [];
 	}
 }
 
+async function writeSources(sources: Source[]): Promise<void> {
+	await writeFile(SOURCES_FILE, JSON.stringify(sources, null, 2), "utf-8");
+}
+
+// ============================================================================
+// Source CRUD Operations
+// ============================================================================
+
+export async function createSource(input: CreateSourceInput): Promise<{
+	success: boolean;
+	source?: Source;
+	error?: string;
+}> {
+	// Validate GitHub URL if type is github_repo
+	let github: GithubMetadata | null = null;
+	if (input.type === "github_repo") {
+		if (!input.originUrl) {
+			return { success: false, error: "GitHub URL is required for github_repo type" };
+		}
+		const parsed = parseGithubUrl(input.originUrl);
+		if (!parsed) {
+			return { success: false, error: "Invalid GitHub URL" };
+		}
+		github = {
+			owner: parsed.owner,
+			repo: parsed.repo,
+			defaultBranch: null,
+			description: null,
+			stars: null,
+			forks: null,
+			fetchedAt: null,
+		};
+	}
+
+	try {
+		const sources = await readSources();
+
+		// Check for duplicate GitHub repos
+		if (input.type === "github_repo" && github) {
+			const existing = sources.find(
+				(s) => s.type === "github_repo" && s.github?.owner === github?.owner && s.github?.repo === github?.repo
+			);
+			if (existing) {
+				return { success: false, error: "This repository has already been added" };
+			}
+		}
+
+		const now = nowISO();
+		const source: Source = {
+			id: crypto.randomUUID(),
+			type: input.type,
+			path: null,
+			originUrl: input.originUrl ?? null,
+			description: input.description,
+			analysisPath: null,
+			analysisConfirmed: false,
+			createdAt: now,
+			updatedAt: now,
+			github,
+		};
+
+		sources.push(source);
+		await writeSources(sources);
+
+		return { success: true, source };
+	} catch (error) {
+		return { success: false, error: String(error) };
+	}
+}
+
+export async function getSources(): Promise<Source[]> {
+	return readSources();
+}
+
+export async function getSourceById(id: string): Promise<Source | null> {
+	const sources = await readSources();
+	return sources.find((s) => s.id === id) ?? null;
+}
+
+export async function updateSource(input: UpdateSourceInput): Promise<{
+	success: boolean;
+	source?: Source;
+	error?: string;
+}> {
+	try {
+		const sources = await readSources();
+		const index = sources.findIndex((s) => s.id === input.id);
+
+		if (index === -1) {
+			return { success: false, error: "Source not found" };
+		}
+
+		const updated: Source = {
+			...sources[index],
+			...(input.path !== undefined && { path: input.path }),
+			...(input.description !== undefined && { description: input.description }),
+			...(input.analysisPath !== undefined && { analysisPath: input.analysisPath }),
+			...(input.analysisConfirmed !== undefined && { analysisConfirmed: input.analysisConfirmed }),
+			updatedAt: nowISO(),
+		};
+
+		sources[index] = updated;
+		await writeSources(sources);
+
+		return { success: true, source: updated };
+	} catch (error) {
+		return { success: false, error: String(error) };
+	}
+}
+
+export async function deleteSource(id: string): Promise<{
+	success: boolean;
+	error?: string;
+}> {
+	try {
+		const sources = await readSources();
+		const filtered = sources.filter((s) => s.id !== id);
+
+		if (filtered.length === sources.length) {
+			return { success: false, error: "Source not found" };
+		}
+
+		await writeSources(filtered);
+		return { success: true };
+	} catch (error) {
+		return { success: false, error: String(error) };
+	}
+}
+
+// ============================================================================
+// GitHub Metadata Enrichment
+// ============================================================================
+
+export async function enrichGithubMetadata(sourceId: string): Promise<{
+	success: boolean;
+	source?: Source;
+	error?: string;
+}> {
+	const sources = await readSources();
+	const index = sources.findIndex((s) => s.id === sourceId);
+
+	if (index === -1) {
+		return { success: false, error: "Source not found" };
+	}
+
+	const source = sources[index];
+	if (source.type !== "github_repo" || !source.github) {
+		return { success: false, error: "Source is not a GitHub repository" };
+	}
+
+	const repoInfo = await fetchRepoInfo(source.github.owner, source.github.repo);
+	if (!repoInfo.success || !repoInfo.data) {
+		return { success: false, error: repoInfo.error ?? "Failed to fetch repo info" };
+	}
+
+	const updated: Source = {
+		...source,
+		github: {
+			...source.github,
+			defaultBranch: repoInfo.data.default_branch,
+			description: repoInfo.data.description,
+			stars: repoInfo.data.stargazers_count,
+			forks: repoInfo.data.forks_count,
+			fetchedAt: nowISO(),
+		},
+		updatedAt: nowISO(),
+	};
+
+	sources[index] = updated;
+	await writeSources(sources);
+
+	return { success: true, source: updated };
+}
+
+// ============================================================================
+// Prompt CRUD (simple key-value for now)
+// ============================================================================
+
+export async function savePrompt(prompt: string): Promise<{ success: boolean; error?: string }> {
+	try {
+		await writeFile(PROMPT_FILE, prompt, "utf-8");
+		return { success: true };
+	} catch (error) {
+		return { success: false, error: String(error) };
+	}
+}
+
 export async function getPrompt(): Promise<string> {
 	try {
-		const filePath = path.join(DATA_DIR, "prompt.md");
-		return await readFile(filePath, "utf-8");
+		return await readFile(PROMPT_FILE, "utf-8");
 	} catch {
 		return "";
 	}
 }
+
+// ============================================================================
+// GitHub API Functions
+// ============================================================================
 
 export async function fetchRepoInfo(owner: string, repo: string): Promise<{
 	success: boolean;
@@ -147,15 +285,15 @@ export async function fetchRepoInfo(owner: string, repo: string): Promise<{
 export async function fetchRepoContents(
 	owner: string,
 	repo: string,
-	path: string = ""
+	contentPath: string = ""
 ): Promise<{
 	success: boolean;
 	data?: RepoContent[];
 	error?: string;
 }> {
 	try {
-		const url = path
-			? `https://api.github.com/repos/${owner}/${repo}/contents/${path}`
+		const url = contentPath
+			? `https://api.github.com/repos/${owner}/${repo}/contents/${contentPath}`
 			: `https://api.github.com/repos/${owner}/${repo}/contents`;
 
 		const response = await fetch(url, {
@@ -195,3 +333,9 @@ export async function fetchRepoContents(
 		return { success: false, error: String(error) };
 	}
 }
+
+// ============================================================================
+// Re-export types for convenience
+// ============================================================================
+
+export type { Source, CreateSourceInput, UpdateSourceInput, RepoContent, RepoInfo } from "./types";

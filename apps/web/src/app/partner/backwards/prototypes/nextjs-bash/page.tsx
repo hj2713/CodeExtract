@@ -1,20 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getApps, getFolderStructure, deleteApp } from "./actions";
 import {
-	createNextApp,
-	getApps,
-	getAppProgress,
-	getFolderStructure,
-	deleteApp,
 	SETUP_STEPS,
 	type CreatedApp,
 	type FolderItem,
 	type StepStatus,
-} from "./actions";
+	type StepProgress,
+} from "./utils";
 
 const TITLE_TEXT = `
 ███╗   ██╗███████╗██╗  ██╗████████╗     ██████╗ ███████╗███╗   ██╗
@@ -107,10 +104,63 @@ function StepStatusIcon({ status }: { status: StepStatus }) {
 	}
 }
 
+// Inline logs component - shows under the running command
+function InlineLogs({ logs, description }: { logs: string; description: string }) {
+	const scrollRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (scrollRef.current) {
+			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+		}
+	}, [logs]);
+
+	// Get last few lines of logs
+	const logLines = logs.split("\n").filter((l) => l.trim()).slice(-4);
+
+	return (
+		<div className="mt-1 ml-5 space-y-0.5">
+			{/* Log output - very small */}
+			<div
+				ref={scrollRef}
+				className="max-h-16 overflow-hidden font-mono text-[10px] leading-tight text-zinc-500"
+			>
+				{logLines.length > 0 ? (
+					logLines.map((line, i) => (
+						<div key={i} className="truncate">
+							{line}
+						</div>
+					))
+				) : (
+					<div className="text-zinc-600">...</div>
+				)}
+			</div>
+			{/* Description with shimmer */}
+			<div className="relative overflow-hidden text-[10px] text-zinc-500">
+				<span className="relative inline-block">
+					{description}...
+					<span className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-zinc-400/20 to-transparent" />
+				</span>
+			</div>
+		</div>
+	);
+}
+
 // Code editor style component showing the bash script with live progress
-function ScriptProgressViewer({ app }: { app: CreatedApp }) {
+function ScriptProgressViewer({
+	appName,
+	stepProgress,
+	status,
+	logs,
+	currentStep,
+}: {
+	appName: string;
+	stepProgress: StepProgress[];
+	status: CreatedApp["status"];
+	logs: string;
+	currentStep: string | null;
+}) {
 	const getStepStatus = (stepId: string): StepStatus => {
-		const step = app.stepProgress?.find((s) => s.stepId === stepId);
+		const step = stepProgress.find((s) => s.stepId === stepId);
 		return step?.status || "pending";
 	};
 
@@ -150,7 +200,7 @@ function ScriptProgressViewer({ app }: { app: CreatedApp }) {
 					<span>
 						<span className="text-purple-400">APP_NAME</span>
 						<span className="text-zinc-400">=</span>
-						<span className="text-green-400">"{app.name}"</span>
+						<span className="text-green-400">"{appName}"</span>
 					</span>
 				</div>
 
@@ -163,51 +213,51 @@ function ScriptProgressViewer({ app }: { app: CreatedApp }) {
 
 				{/* Steps */}
 				{SETUP_STEPS.map((step, index) => {
-					const status = getStepStatus(step.id);
+					const stepStatus = getStepStatus(step.id);
 					const lineNum = index + 5;
+					const isRunning = stepStatus === "running" && currentStep === step.id;
 
 					return (
 						<div
 							key={step.id}
-							className={`flex items-start gap-3 py-0.5 transition-all duration-300 ${
-								status === "running"
+							className={`py-0.5 transition-all duration-300 ${
+								stepStatus === "running"
 									? "bg-yellow-500/10 -mx-4 px-4"
-									: status === "completed"
+									: stepStatus === "completed"
 										? "bg-green-500/5 -mx-4 px-4"
-										: status === "error"
+										: stepStatus === "error"
 											? "bg-red-500/10 -mx-4 px-4"
 											: ""
 							}`}
 						>
-							<span className="w-6 text-right text-zinc-600 shrink-0">{lineNum}</span>
-							<span className="w-5 shrink-0 flex items-center justify-center">
-								<StepStatusIcon status={status} />
-							</span>
-							<div className="flex-1 min-w-0">
-								<div className="flex items-center gap-2">
-									{status === "running" && (
-										<LoadingSpinner className="size-3 text-yellow-400" />
-									)}
-									<code
-										className={`${
-											status === "completed"
-												? "text-green-300"
-												: status === "running"
-													? "text-yellow-300"
-													: status === "error"
-														? "text-red-300"
-														: "text-zinc-300"
-										}`}
-									>
-										{step.code}
-									</code>
-								</div>
-								{status === "running" && (
-									<div className="mt-1 text-xs text-yellow-400/70 animate-pulse">
-										{step.description}...
+							<div className="flex items-start gap-3">
+								<span className="w-6 text-right text-zinc-600 shrink-0">{lineNum}</span>
+								<span className="w-5 shrink-0 flex items-center justify-center">
+									<StepStatusIcon status={stepStatus} />
+								</span>
+								<div className="flex-1 min-w-0">
+									<div className="flex items-center gap-2">
+										{stepStatus === "running" && (
+											<LoadingSpinner className="size-3 text-yellow-400" />
+										)}
+										<code
+											className={`${
+												stepStatus === "completed"
+													? "text-green-300"
+													: stepStatus === "running"
+														? "text-yellow-300"
+														: stepStatus === "error"
+															? "text-red-300"
+															: "text-zinc-300"
+											}`}
+										>
+											{step.code}
+										</code>
 									</div>
-								)}
+								</div>
 							</div>
+							{/* Inline logs under running step */}
+							{isRunning && <InlineLogs logs={logs} description={step.description} />}
 						</div>
 					);
 				})}
@@ -223,7 +273,7 @@ function ScriptProgressViewer({ app }: { app: CreatedApp }) {
 				<div className="flex items-center gap-3">
 					<span className="w-6 text-right text-zinc-600">10</span>
 					<span className="w-5 flex items-center justify-center">
-						{app.status === "ready" && <CheckIcon />}
+						{status === "ready" && <CheckIcon />}
 					</span>
 					<span>
 						<span className="text-cyan-400">echo</span>
@@ -236,11 +286,11 @@ function ScriptProgressViewer({ app }: { app: CreatedApp }) {
 			<div className="flex items-center justify-between border-t border-zinc-800 bg-zinc-900 px-3 py-1.5 font-mono text-xs">
 				<div className="flex items-center gap-4">
 					<span className="text-zinc-400">
-						{app.status === "creating" ? (
+						{status === "creating" ? (
 							<span className="text-yellow-400">Running...</span>
-						) : app.status === "ready" ? (
+						) : status === "ready" ? (
 							<span className="text-green-400">Completed</span>
-						) : app.status === "error" ? (
+						) : status === "error" ? (
 							<span className="text-red-400">Failed</span>
 						) : (
 							<span className="text-zinc-500">Pending</span>
@@ -249,8 +299,8 @@ function ScriptProgressViewer({ app }: { app: CreatedApp }) {
 				</div>
 				<div className="flex items-center gap-4 text-zinc-500">
 					<span>
-						{app.stepProgress?.filter((s) => s.status === "completed").length || 0}/
-						{SETUP_STEPS.length} steps
+						{stepProgress.filter((s) => s.status === "completed").length}/{SETUP_STEPS.length}{" "}
+						steps
 					</span>
 				</div>
 			</div>
@@ -305,10 +355,17 @@ function AppCard({
 	const completedSteps = app.stepProgress?.filter((s) => s.status === "completed").length || 0;
 
 	return (
-		<button
-			type="button"
+		<div
+			role="button"
+			tabIndex={0}
 			onClick={onSelect}
-			className={`w-full rounded-none border p-4 text-left transition-all ${
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					onSelect();
+				}
+			}}
+			className={`w-full cursor-pointer rounded-none border p-4 text-left transition-all ${
 				isSelected ? "border-primary bg-primary/5" : "hover:border-muted-foreground/50"
 			}`}
 		>
@@ -324,9 +381,7 @@ function AppCard({
 					<span
 						className={`rounded-none border px-2 py-0.5 font-mono text-xs ${statusColors[app.status]}`}
 					>
-						{app.status === "creating"
-							? `${completedSteps}/${SETUP_STEPS.length}`
-							: app.status}
+						{app.status === "creating" ? `${completedSteps}/${SETUP_STEPS.length}` : app.status}
 					</span>
 					<button
 						type="button"
@@ -347,7 +402,7 @@ function AppCard({
 					</button>
 				</div>
 			</div>
-		</button>
+		</div>
 	);
 }
 
@@ -358,72 +413,139 @@ export default function NextjsBashPage() {
 	const [loadingFolder, setLoadingFolder] = useState(false);
 	const [appName, setAppName] = useState("");
 	const [creating, setCreating] = useState(false);
-	const [creatingAppId, setCreatingAppId] = useState<string | null>(null);
 	const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-	const loadApps = useCallback(async () => {
-		const loadedApps = await getApps();
-		setApps(loadedApps);
+	// Live streaming state
+	const [streamingApp, setStreamingApp] = useState<{
+		name: string;
+		status: CreatedApp["status"];
+		stepProgress: StepProgress[];
+	} | null>(null);
+	const [terminalLogs, setTerminalLogs] = useState("");
+	const [currentStep, setCurrentStep] = useState<string | null>(null);
 
-		// Update selected app if it exists
-		if (selectedApp) {
-			const updated = loadedApps.find((a) => a.id === selectedApp.id);
-			if (updated) {
-				setSelectedApp(updated);
-			}
-		}
-	}, [selectedApp]);
+	const abortControllerRef = useRef<AbortController | null>(null);
 
 	useEffect(() => {
 		loadApps();
+		return () => {
+			abortControllerRef.current?.abort();
+		};
 	}, []);
 
-	// Poll for progress while creating
-	useEffect(() => {
-		if (!creatingAppId) return;
-
-		const interval = setInterval(async () => {
-			const app = await getAppProgress(creatingAppId);
-			if (app) {
-				setSelectedApp(app);
-				await loadApps();
-
-				if (app.status === "ready" || app.status === "error") {
-					setCreatingAppId(null);
-					setCreating(false);
-					if (app.status === "ready") {
-						setMessage({ type: "success", text: `App "${app.name}" created successfully!` });
-					}
-				}
-			}
-		}, 500);
-
-		return () => clearInterval(interval);
-	}, [creatingAppId, loadApps]);
+	async function loadApps() {
+		const loadedApps = await getApps();
+		setApps(loadedApps);
+	}
 
 	async function handleCreate(e: React.FormEvent) {
 		e.preventDefault();
 		if (!appName.trim()) return;
 
+		const sanitizedName = appName.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+
 		setCreating(true);
 		setMessage(null);
+		setTerminalLogs("");
+		setCurrentStep(null);
+		setStreamingApp({
+			name: sanitizedName,
+			status: "creating",
+			stepProgress: SETUP_STEPS.map((s) => ({
+				stepId: s.id,
+				status: "pending" as StepStatus,
+			})),
+		});
+		setAppName("");
 
-		// Start creating - this returns immediately with the app entry
-		const result = await createNextApp(appName.trim());
+		// Use fetch with streaming
+		try {
+			abortControllerRef.current = new AbortController();
 
-		if (result.app) {
-			setCreatingAppId(result.app.id);
-			setSelectedApp(result.app);
-			setAppName("");
-			await loadApps();
-		} else {
-			setMessage({ type: "error", text: `Failed to create app: ${result.error}` });
+			const response = await fetch("/partner/backwards/prototypes/nextjs-bash/api/create", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ appName: sanitizedName }),
+				signal: abortControllerRef.current.signal,
+			});
+
+			const reader = response.body?.getReader();
+			const decoder = new TextDecoder();
+
+			if (!reader) throw new Error("No reader available");
+
+			let buffer = "";
+
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+
+				buffer += decoder.decode(value, { stream: true });
+
+				// Parse SSE events from buffer
+				const lines = buffer.split("\n");
+				buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+				let eventType = "";
+				for (const line of lines) {
+					if (line.startsWith("event: ")) {
+						eventType = line.slice(7);
+					} else if (line.startsWith("data: ") && eventType) {
+						try {
+							const data = JSON.parse(line.slice(6));
+
+							if (eventType === "step") {
+								setStreamingApp((prev) => {
+									if (!prev) return prev;
+									const newProgress = [...prev.stepProgress];
+									const idx = newProgress.findIndex((s) => s.stepId === data.stepId);
+									if (idx !== -1) {
+										newProgress[idx] = {
+											stepId: data.stepId,
+											status: data.status,
+											error: data.error,
+										};
+									}
+									return { ...prev, stepProgress: newProgress };
+								});
+
+								if (data.status === "running") {
+									setCurrentStep(data.stepId);
+									setTerminalLogs(""); // Clear logs for new step
+								}
+							} else if (eventType === "log") {
+								setTerminalLogs((prev) => prev + data.log);
+							} else if (eventType === "complete") {
+								setStreamingApp((prev) => (prev ? { ...prev, status: "ready" } : prev));
+								setCurrentStep(null);
+								setMessage({ type: "success", text: `App "${sanitizedName}" created!` });
+								await loadApps();
+							} else if (eventType === "error") {
+								setStreamingApp((prev) => (prev ? { ...prev, status: "error" } : prev));
+								setMessage({ type: "error", text: data.error });
+								await loadApps();
+							}
+						} catch {
+							// Ignore parse errors
+						}
+						eventType = "";
+					}
+				}
+			}
+		} catch (error) {
+			if ((error as Error).name !== "AbortError") {
+				setMessage({ type: "error", text: `Failed to create app: ${error}` });
+			}
+		} finally {
 			setCreating(false);
 		}
 	}
 
 	async function handleSelectApp(app: CreatedApp) {
 		setSelectedApp(app);
+		setStreamingApp(null);
+		setTerminalLogs("");
+		setCurrentStep(null);
 		if (app.status === "ready") {
 			setLoadingFolder(true);
 			const result = await getFolderStructure(app.name);
@@ -504,7 +626,7 @@ export default function NextjsBashPage() {
 					{/* Apps Grid */}
 					<section className="space-y-4">
 						<h2 className="font-mono font-medium">Created Apps ({apps.length})</h2>
-						{apps.length === 0 ? (
+						{apps.length === 0 && !streamingApp ? (
 							<p className="font-mono text-sm text-muted-foreground">
 								No apps created yet. Create one above!
 							</p>
@@ -526,9 +648,26 @@ export default function NextjsBashPage() {
 
 				{/* Right Column: Progress / Folder Structure */}
 				<div className="space-y-4">
-					{/* Script Progress Viewer - shown during creation or for recently created */}
-					{selectedApp && (selectedApp.status === "creating" || selectedApp.stepProgress) && (
-						<ScriptProgressViewer app={selectedApp} />
+					{/* Live Streaming Progress Viewer */}
+					{streamingApp && (
+						<ScriptProgressViewer
+							appName={streamingApp.name}
+							stepProgress={streamingApp.stepProgress}
+							status={streamingApp.status}
+							logs={terminalLogs}
+							currentStep={currentStep}
+						/>
+					)}
+
+					{/* Script Progress Viewer for selected app (without live logs) */}
+					{!streamingApp && selectedApp?.stepProgress && (
+						<ScriptProgressViewer
+							appName={selectedApp.name}
+							stepProgress={selectedApp.stepProgress}
+							status={selectedApp.status}
+							logs=""
+							currentStep={null}
+						/>
 					)}
 
 					{/* Folder Structure - shown when ready */}
@@ -558,7 +697,7 @@ export default function NextjsBashPage() {
 						</Card>
 					)}
 
-					{!selectedApp && (
+					{!streamingApp && !selectedApp && (
 						<Card className="rounded-none">
 							<CardHeader>
 								<CardTitle className="font-mono">Folder Structure</CardTitle>
@@ -572,6 +711,18 @@ export default function NextjsBashPage() {
 					)}
 				</div>
 			</div>
+
+			{/* Shimmer animation keyframes */}
+			<style jsx global>{`
+				@keyframes shimmer {
+					0% {
+						transform: translateX(-100%);
+					}
+					100% {
+						transform: translateX(100%);
+					}
+				}
+			`}</style>
 		</div>
 	);
 }

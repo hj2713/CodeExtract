@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { fetchRepoInfo, fetchRepoContents, type GithubEntry, type RepoContent, type RepoInfo } from "./actions";
+import { Button } from "@/components/ui/button";
+import { fetchRepoContents, enrichGithubMetadata, deleteSource, type Source, type RepoContent } from "./actions";
 
 function FolderIcon() {
 	return (
@@ -116,54 +117,98 @@ function RepoTree({
 	);
 }
 
-export function GithubRepoViewer({ entry }: { entry: GithubEntry }) {
-	const [repoInfo, setRepoInfo] = useState<RepoInfo | null>(null);
+export function GithubRepoViewer({
+	source,
+	onUpdate,
+	onDelete,
+}: {
+	source: Source;
+	onUpdate?: (source: Source) => void;
+	onDelete?: (id: string) => void;
+}) {
 	const [currentPath, setCurrentPath] = useState("");
-	const [loading, setLoading] = useState(true);
+	const [enriching, setEnriching] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 
-	useEffect(() => {
-		async function load() {
-			const result = await fetchRepoInfo(entry.owner, entry.repo);
-			if (result.success && result.data) {
-				setRepoInfo(result.data);
-			}
-			setLoading(false);
+	// Must be a github_repo with github metadata
+	if (source.type !== "github_repo" || !source.github) {
+		return null;
+	}
+
+	const { owner, repo, stars, forks, defaultBranch, description } = source.github;
+	const hasMetadata = stars !== null;
+
+	async function handleEnrich() {
+		setEnriching(true);
+		const result = await enrichGithubMetadata(source.id);
+		if (result.success && result.source) {
+			onUpdate?.(result.source);
 		}
-		load();
-	}, [entry.owner, entry.repo]);
+		setEnriching(false);
+	}
 
-	if (loading) {
-		return (
-			<Card>
-				<CardContent className="py-8">
-					<div className="font-mono text-xs text-muted-foreground">Loading repository info...</div>
-				</CardContent>
-			</Card>
-		);
+	async function handleDelete() {
+		if (!confirm(`Delete ${owner}/${repo}?`)) return;
+		setDeleting(true);
+		const result = await deleteSource(source.id);
+		if (result.success) {
+			onDelete?.(source.id);
+		}
+		setDeleting(false);
 	}
 
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="font-mono">
-					{entry.owner}/{entry.repo}
-				</CardTitle>
-				{repoInfo?.description && <CardDescription>{repoInfo.description}</CardDescription>}
-				{repoInfo && (
-					<div className="flex gap-4 font-mono text-xs text-muted-foreground">
-						<span>★ {repoInfo.stargazers_count.toLocaleString()}</span>
-						<span>⑂ {repoInfo.forks_count.toLocaleString()}</span>
-						<span>branch: {repoInfo.default_branch}</span>
+				<div className="flex items-start justify-between">
+					<div className="space-y-1">
+						<CardTitle className="font-mono">
+							{owner}/{repo}
+						</CardTitle>
+						{description && <CardDescription>{description}</CardDescription>}
+						{source.description && source.description !== description && (
+							<p className="font-mono text-xs text-muted-foreground italic">{source.description}</p>
+						)}
 					</div>
+					<div className="flex gap-1">
+						{!hasMetadata && (
+							<Button
+								variant="ghost"
+								size="icon-xs"
+								onClick={handleEnrich}
+								disabled={enriching}
+								title="Fetch repo info"
+							>
+								{enriching ? "..." : "↻"}
+							</Button>
+						)}
+						<Button
+							variant="ghost"
+							size="icon-xs"
+							onClick={handleDelete}
+							disabled={deleting}
+							className="text-muted-foreground hover:text-destructive"
+							title="Delete"
+						>
+							×
+						</Button>
+					</div>
+				</div>
+				{hasMetadata && (
+					<div className="flex gap-4 font-mono text-xs text-muted-foreground">
+						<span>★ {(stars ?? 0).toLocaleString()}</span>
+						<span>⑂ {(forks ?? 0).toLocaleString()}</span>
+						{defaultBranch && <span>branch: {defaultBranch}</span>}
+					</div>
+				)}
+				{source.analysisConfirmed && (
+					<span className="inline-flex items-center gap-1 font-mono text-xs text-green-400">
+						✓ Analysis confirmed
+					</span>
 				)}
 			</CardHeader>
 			<CardContent>
-				<RepoTree
-					owner={entry.owner}
-					repo={entry.repo}
-					currentPath={currentPath}
-					onNavigate={setCurrentPath}
-				/>
+				<RepoTree owner={owner} repo={repo} currentPath={currentPath} onNavigate={setCurrentPath} />
 			</CardContent>
 		</Card>
 	);

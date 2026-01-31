@@ -1,0 +1,22 @@
+[
+  {
+    "id": "c39d4282-8a2e-4668-81d6-2db2bd5841ed",
+    "type": "github_repo",
+    "path": null,
+    "originUrl": "https://github.com/darenhua/1000x-landing",
+    "description": "jg",
+    "analysisPath": null,
+    "analysisConfirmed": false,
+    "createdAt": "2026-01-31T20:58:53.348Z",
+    "updatedAt": "2026-01-31T20:58:53.348Z",
+    "github": {
+      "owner": "darenhua",
+      "repo": "1000x-landing",
+      "defaultBranch": null,
+      "description": null,
+      "stars": null,
+      "forks": null,
+      "fetchedAt": null
+    }
+  }
+]
