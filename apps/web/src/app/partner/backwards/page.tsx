@@ -30,7 +30,7 @@ import {
 // Subpage Card Component
 function SubpageCard({ folder }: { folder: string }) {
   return (
-    <Link href={`/partner/backwards/prototypes/${folder}`}>
+    <Link href={`/partner/backwards/prototypes/${folder}` as any}>
       <Card className="cursor-pointer transition-all hover:border-primary/50 hover:shadow-md">
         <CardContent className="flex items-center justify-between py-4">
           <code className="rounded bg-muted px-2 py-1 text-sm">{folder}</code>

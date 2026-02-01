@@ -24,12 +24,12 @@ export async function GET(
       );
     }
 
-    // Parse JSON fields
+    // Drizzle already handles JSON parsing with mode: "json"
     return NextResponse.json({
       ...source,
-      techStack: source.techStack ? JSON.parse(source.techStack) : [],
-      dependencies: source.dependencies ? JSON.parse(source.dependencies) : [],
-      components: source.components ? JSON.parse(source.components) : [],
+      techStack: source.techStack || [],
+      dependencies: source.dependencies || [],
+      components: source.components || [],
     });
   } catch (error) {
     console.error("Error fetching source:", error);

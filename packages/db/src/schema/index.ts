@@ -3,3 +3,4 @@ export * from "./sources";
 export * from "./conversations";
 export * from "./messages";
 export * from "./extraction-jobs";
+export * from "./requirements";
