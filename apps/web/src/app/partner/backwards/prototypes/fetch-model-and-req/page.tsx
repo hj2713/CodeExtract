@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 // Animation styles - defined as a constant to avoid hydration issues
 const animationStyles = `
@@ -37,6 +37,48 @@ import {
 } from "./actions";
 import { useQueryClient } from "@tanstack/react-query";
 import { SETUP_STEPS, type StepProgress, type JobProgress } from "./types";
+
+// ============================================================================
+// Auto-Process Hook - Polls /api/process-jobs to process pending jobs
+// ============================================================================
+
+function useAutoProcessJobs(stats: JobStats | undefined, onJobProcessed: () => void) {
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [lastProcessed, setLastProcessed] = useState<string | null>(null);
+
+	const processNextJob = useCallback(async () => {
+		if (isProcessing) return;
+		
+		setIsProcessing(true);
+		try {
+			const response = await fetch("/api/process-jobs", { method: "POST" });
+			const result = await response.json();
+			
+			if (result.processed) {
+				console.log(`[AUTO-PROCESS] Job ${result.jobId} ${result.status}`);
+				setLastProcessed(result.jobId);
+				onJobProcessed();
+			}
+		} catch (error) {
+			console.error("[AUTO-PROCESS] Error:", error);
+		} finally {
+			setIsProcessing(false);
+		}
+	}, [isProcessing, onJobProcessed]);
+
+	// Auto-process when there are pending jobs
+	useEffect(() => {
+		const pendingCount = stats?.pending ?? 0;
+		
+		if (pendingCount > 0 && !isProcessing) {
+			// Small delay to prevent hammering
+			const timer = setTimeout(processNextJob, 500);
+			return () => clearTimeout(timer);
+		}
+	}, [stats?.pending, isProcessing, processNextJob]);
+
+	return { isProcessing, lastProcessed };
+}
 
 // ============================================================================
 // Icons
@@ -783,12 +825,13 @@ export default function Page() {
 	const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 	const queryClient = useQueryClient();
 
-	const handlePew = () => {
+	const handlePew = useCallback(() => {
 		// Immediately refetch to see the entry animation
 		queryClient.invalidateQueries({ queryKey: ["jobs-queue"] });
 		queryClient.invalidateQueries({ queryKey: ["job-stats"] });
 		queryClient.invalidateQueries({ queryKey: ["requirements-without-job"] });
-	};
+		queryClient.invalidateQueries({ queryKey: ["processing-jobs"] });
+	}, [queryClient]);
 
 	const { data: requirements } = useQuery({
 		queryKey: ["requirements-without-job"],
@@ -814,6 +857,9 @@ export default function Page() {
 		refetchInterval: 2000,
 	});
 
+	// Auto-process pending jobs via API
+	const { isProcessing: isAutoProcessing } = useAutoProcessJobs(stats, handlePew);
+
 	const { data: selectedJobProgress } = useQuery({
 		queryKey: ["job-progress", selectedJobId],
 		queryFn: () => (selectedJobId ? getJobProgress(selectedJobId) : null),
@@ -835,17 +881,32 @@ export default function Page() {
 		originUrl?: string | null;
 	} | null;
 
+	// Get sourceId from first requirement for back navigation
+	const firstSourceId = requirements?.[0]?.sourceId;
+	const backUrl = firstSourceId ? `/himanshu?source=${firstSourceId}` : "/himanshu";
+
 	return (
 		<div className="p-8 max-w-6xl mx-auto space-y-8">
 			<div className="flex items-center justify-between">
 				<div>
 					<h1 className="font-mono text-xl font-bold mb-1">Extraction Queue</h1>
-					<p className="font-mono text-sm text-muted-foreground">
+					<p className="font-mono text-sm text-muted-foreground flex items-center gap-2">
 						Phase 4: Code Extraction Pipeline
+						{isAutoProcessing && (
+							<span className="flex items-center gap-1.5 text-yellow-400">
+								<LoadingSpinner className="size-3" />
+								<span className="text-xs">Auto-processing...</span>
+							</span>
+						)}
+						{(stats?.pending ?? 0) > 0 && !isAutoProcessing && (
+							<span className="text-xs text-green-400">
+								({stats?.pending} pending)
+							</span>
+						)}
 					</p>
 				</div>
 				<a 
-					href="/himanshu" 
+					href={backUrl}
 					className="font-mono text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 border border-foreground/10 px-3 py-2 hover:border-foreground/30"
 				>
 					<svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
