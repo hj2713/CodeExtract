@@ -2,6 +2,7 @@ import "@my-better-t-app/env/web";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+	output: "standalone", // Required for AWS Amplify SSR deployment
 	typedRoutes: true,
 	reactCompiler: true,
 	transpilePackages: ["shiki"],
