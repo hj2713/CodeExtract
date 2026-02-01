@@ -247,7 +247,7 @@ function ExtractPageContent() {
       if (!sourceData) {
         // Source not found, go back to input
         console.log("Source not found, redirecting to input");
-        router.replace("/extract");
+        router.replace("/himanshu");
         return;
       }
       
@@ -325,7 +325,7 @@ function ExtractPageContent() {
       setIsConnecting(false);
       
       // Update URL
-      router.push(`/extract?source=${sourceData.id}`);
+      router.push(`/himanshu?source=${sourceData.id}`);
       
       // Start analysis if not already done
       if (sourceData.analysisStatus !== "analyzed" && sourceData.analysisStatus !== "complete") {
@@ -468,7 +468,7 @@ function ExtractPageContent() {
       setRequirements(reqs as unknown as Requirement[]);
 
       // Update URL with source ID
-      router.push(`/extract?source=${result.sourceId}`);
+      router.push(`/himanshu?source=${result.sourceId}`);
 
       setAnalysisStep(3);
       setProgress(100);

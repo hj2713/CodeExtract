@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const { messages, analysisContext }: { messages: UIMessage[]; analysisContext?: string } = await req.json();
 
   // Read system prompt from file
-  const promptFilePath = path.join(process.cwd(), "src/app/api/phase3/chat/system_prompt.txt");
+  const promptFilePath = path.join(process.cwd(), "src/app/api/interview-chat/system_prompt.txt");
   const INTERVIEWER_SYSTEM_PROMPT = await fs.readFile(promptFilePath, "utf-8");
 
   // Inject analysis context into system prompt

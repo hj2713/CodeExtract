@@ -51,7 +51,7 @@ export function InterviewChat({
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
-      api: "/api/phase3/chat",
+      api: "/api/interview-chat",
       body: {
         analysisContext: analysisContent,
       },

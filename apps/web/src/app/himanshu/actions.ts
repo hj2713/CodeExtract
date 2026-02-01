@@ -65,7 +65,7 @@ export async function cloneAndAnalyze(sourceId: string) {
     return { success: false, error: analyzeResult.error };
   }
 
-  revalidatePath("/extract");
+  revalidatePath("/himanshu");
   return { success: true };
 }
 
@@ -156,7 +156,7 @@ export async function saveRequirement(data: {
     updatedAt: now,
   });
 
-  revalidatePath("/extract");
+  revalidatePath("/himanshu");
   
   const created = await db.select().from(requirements).where(eq(requirements.id, id));
   return created[0];
@@ -172,12 +172,12 @@ export async function startExtraction(requirementId: string) {
     })
     .where(eq(requirements.id, requirementId));
 
-  revalidatePath("/extract");
+  revalidatePath("/himanshu");
   return { success: true };
 }
 
 // Delete requirement
 export async function deleteRequirement(requirementId: string) {
   await db.delete(requirements).where(eq(requirements.id, requirementId));
-  revalidatePath("/extract");
+  revalidatePath("/himanshu");
 }
