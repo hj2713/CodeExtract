@@ -1,0 +1,33 @@
+{
+  "jobId": "1a9b1a2c-49fe-4f1d-83e3-77b3bda2561f",
+  "name": "the-goal-is-to-create-a-react-component-that-rende",
+  "status": "failed",
+  "stepProgress": [
+    {
+      "stepId": "create-nextjs",
+      "status": "completed"
+    },
+    {
+      "stepId": "create-folders",
+      "status": "completed"
+    },
+    {
+      "stepId": "clone-repo",
+      "status": "error",
+      "error": "Failed to clone repo: Cloning into '.'...\nfatal: repository 'https://stripe.com/' not found\n"
+    },
+    {
+      "stepId": "copy-templates",
+      "status": "pending"
+    },
+    {
+      "stepId": "run-claude",
+      "status": "pending"
+    }
+  ],
+  "currentStep": "clone-repo",
+  "logs": "Cloning into '.'...\nfatal: repository 'https://stripe.com/' not found\n",
+  "claudeStatus": "not_started",
+  "startedAt": "2026-02-01T10:49:10.604Z",
+  "completedAt": "2026-02-01T10:49:12.461Z"
+}

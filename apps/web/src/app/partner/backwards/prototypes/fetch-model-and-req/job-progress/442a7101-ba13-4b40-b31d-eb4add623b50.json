@@ -1,0 +1,31 @@
+{
+  "jobId": "442a7101-ba13-4b40-b31d-eb4add623b50",
+  "name": "the-goal-is-to-extract-the-command-menu-component-",
+  "status": "processing",
+  "stepProgress": [
+    {
+      "stepId": "create-nextjs",
+      "status": "completed"
+    },
+    {
+      "stepId": "create-folders",
+      "status": "completed"
+    },
+    {
+      "stepId": "clone-repo",
+      "status": "completed"
+    },
+    {
+      "stepId": "copy-templates",
+      "status": "completed"
+    },
+    {
+      "stepId": "run-claude",
+      "status": "running"
+    }
+  ],
+  "currentStep": "run-claude",
+  "logs": "[Claude] {\"type\":\"system\",\"subtype\":\"init\",\"cwd\":\"/Users/himanshujhawar/Desktop/Developing/Code Extract Brown...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01FqdbrXUg8HS4QYiNyzta...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01FqdbrXUg8HS4QYiNyzta...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01VtPWT6TqCab4vruDGR1HHL\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01FqdbrXUg8HS4QYiNyzta...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01Euzzf53t8wvohzeEP7EwKa\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01FqdbrXUg8HS4QYiNyzta...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01V1b7VU1TNy5yMU6QBQJLox\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01W1ExgMWgiyeMc9ibtGkv...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01W1ExgMWgiyeMc9ibtGkv...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_012KnW8vmchTfiogHnwTDKtD\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01W1ExgMWgiyeMc9ibtGkv...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01EM7khyJJRCHip1oF3U8q1C\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01W1ExgMWgiyeMc9ibtGkv...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01SGgzPJsJ63w8GcpUPVEVS5\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01W1ExgMWgiyeMc9ibtGkv...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01GY4hXik8gPK9ygiH7bxJof\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Mr78ZReztHK4kTDw15TV...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Mr78ZReztHK4kTDw15TV...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01J3vesWgqjPNSvbs7b2uWvT\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Mr78ZReztHK4kTDw15TV...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_012GukabTdZ3M46uaLCVSdiy\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Mr78ZReztHK4kTDw15TV...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_014YNUoDLk7k1gBFyFqXFaSP\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01VjVRrmc7WByk7Gvdn4kp...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01VjVRrmc7WByk7Gvdn4kp...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01Yb7vXNhkQSni9Wa8wa7UC2\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01VjVRrmc7WByk7Gvdn4kp...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"content\":\"This Bash comman...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01JkfmezCzNh2M4dCqCjhZ...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_017SwRRB5STdTMzDRkGPrgjK\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01JkfmezCzNh2M4dCqCjhZ...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_018hXmyjXYg5ZHPtdy5nYJXm\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_014UH8JsXsY37XiJBNiJ2Y...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01XHBTQ9ajvCJBxohjTNAtUQ\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Wsa7cKEcb55DvnsUQTk3...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Wsa7cKEcb55DvnsUQTk3...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01V6xqNn8qLeRtMFNfMUnV2N\",\"...\n",
+  "claudeStatus": "running",
+  "startedAt": "2026-02-01T09:52:21.141Z"
+}

@@ -19,6 +19,7 @@
 		"@my-better-t-app/env": "workspace:*",
 		"@octokit/rest": "^22.0.1",
 		"@radix-ui/react-scroll-area": "^1.2.10",
+		"@radix-ui/react-slot": "^1.2.4",
 		"@tanstack/react-form": "^1.27.3",
 		"@tanstack/react-query": "^5.90.20",
 		"ai": "^6.0.3",

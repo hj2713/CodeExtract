@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Job } from "@my-better-t-app/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { TopNav } from "@/components/ds/top-nav";
 import {
 	fetchJobs,
 	fetchStats,
@@ -236,16 +237,21 @@ export default function JobsQueuePage() {
 
 	if (loading) {
 		return (
-			<div className="container mx-auto max-w-5xl px-4 py-2">
-				<pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
-				<p className="font-mono text-muted-foreground">Loading...</p>
-			</div>
+			<>
+				<TopNav showCTA={false} />
+				<div className="container mx-auto max-w-5xl px-4 py-8">
+					<h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--n-800)' }}>Jobs Queue</h1>
+					<p style={{ color: 'var(--n-500)' }}>Loading...</p>
+				</div>
+			</>
 		);
 	}
 
 	return (
-		<div className="container mx-auto max-w-5xl px-4 py-2">
-			<pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
+		<>
+			<TopNav showCTA={false} />
+			<div className="container mx-auto max-w-5xl px-4 py-8">
+				<h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--n-800)' }}>Jobs Queue</h1>
 
 			<div className="grid gap-6 lg:grid-cols-3">
 				{/* Left column: Create Job + Actions */}
@@ -372,5 +378,6 @@ export default function JobsQueuePage() {
 				</div>
 			</div>
 		</div>
+	</>
 	);
 }

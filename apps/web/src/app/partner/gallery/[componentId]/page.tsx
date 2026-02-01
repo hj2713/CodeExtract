@@ -1,0 +1,312 @@
+'use client';
+
+import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, ExternalLink, Monitor, Tablet, Smartphone, Maximize2, Loader2, AlertCircle } from 'lucide-react';
+import { TopNav } from '@/components/ds';
+import { Button } from '@/components/ui/button';
+
+export default function ComponentViewerPage() {
+  const params = useParams();
+  const router = useRouter();
+  const componentId = params.componentId as string;
+  const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [previewStatus, setPreviewStatus] = useState<'loading' | 'starting' | 'ready' | 'error'>('loading');
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
+  useEffect(() => {
+    let mounted = true;
+    let pollInterval: NodeJS.Timeout;
+
+    async function startPreviewServer() {
+      try {
+        setPreviewStatus('starting');
+        
+        // Start the preview server
+        const response = await fetch('/api/components/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ componentId, action: 'start' })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Failed to start preview server');
+        }
+
+        if (!mounted) return;
+
+        setPreviewUrl(data.url);
+
+        // Poll until server is ready
+        pollInterval = setInterval(async () => {
+          try {
+            const healthCheck = await fetch(`${data.url}/extracted`, { 
+              mode: 'no-cors'
+            });
+            if (mounted) {
+              setPreviewStatus('ready');
+              clearInterval(pollInterval);
+            }
+          } catch (e) {
+            // Server not ready yet, keep polling
+          }
+        }, 2000);
+
+        // Fallback: assume ready after 8 seconds
+        setTimeout(() => {
+          if (mounted && previewStatus !== 'ready') {
+            setPreviewStatus('ready');
+            clearInterval(pollInterval);
+          }
+        }, 8000);
+
+      } catch (error: any) {
+        if (mounted) {
+          setPreviewStatus('error');
+          setErrorMessage(error.message);
+        }
+      }
+    }
+
+    startPreviewServer();
+
+    return () => {
+      mounted = false;
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [componentId]);
+
+  const iframeSrc = previewStatus === 'ready' ? `${previewUrl}/extracted` : '';
+
+  const viewModes = [
+    { id: 'desktop', icon: Monitor, width: '100%', label: 'Desktop' },
+    { id: 'tablet', icon: Tablet, width: '768px', label: 'Tablet' },
+    { id: 'mobile', icon: Smartphone, width: '375px', label: 'Mobile' },
+  ] as const;
+
+  const componentName = componentId
+    .split('-')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
+  return (
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: 'var(--n-50)',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {!isFullscreen && <TopNav showCTA={false} />}
+      
+      {/* Toolbar */}
+      <div style={{
+        backgroundColor: 'var(--n-0)',
+        borderBottom: '1px solid var(--n-200)',
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/partner/gallery')}
+            style={{ gap: '6px' }}
+          >
+            <ArrowLeft style={{ width: '16px', height: '16px' }} />
+            Gallery
+          </Button>
+          
+          <div style={{ height: '24px', width: '1px', backgroundColor: 'var(--n-200)' }} />
+          
+          <div>
+            <h1 style={{
+              fontSize: '15px',
+              fontWeight: 600,
+              color: 'var(--n-800)',
+              margin: 0,
+              maxWidth: '400px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {componentName}
+            </h1>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Viewport Switcher */}
+          <div style={{
+            display: 'flex',
+            backgroundColor: 'var(--n-50)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '4px',
+            gap: '2px',
+          }}>
+            {viewModes.map((mode) => {
+              const Icon = mode.icon;
+              const isActive = viewMode === mode.id;
+              return (
+                <button
+                  key={mode.id}
+                  onClick={() => setViewMode(mode.id)}
+                  title={mode.label}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    backgroundColor: isActive ? 'var(--n-0)' : 'transparent',
+                    boxShadow: isActive ? 'var(--shadow-card)' : 'none',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                >
+                  <Icon style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    color: isActive ? 'var(--brand-600)' : 'var(--n-500)' 
+                  }} />
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ height: '24px', width: '1px', backgroundColor: 'var(--n-200)' }} />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            style={{ gap: '6px' }}
+          >
+            <Maximize2 style={{ width: '16px', height: '16px' }} />
+            {isFullscreen ? 'Exit' : 'Fullscreen'}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(iframeSrc, '_blank')}
+            disabled={previewStatus !== 'ready'}
+            style={{ gap: '6px' }}
+          >
+            <ExternalLink style={{ width: '16px', height: '16px' }} />
+            Open in new tab
+          </Button>
+        </div>
+      </div>
+
+      {/* Preview Area */}
+      <div style={{
+        flex: 1,
+        padding: isFullscreen ? 0 : '24px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'auto',
+      }}>
+        {previewStatus === 'loading' || previewStatus === 'starting' ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '48px',
+          }}>
+            <Loader2 
+              style={{ 
+                width: '40px', 
+                height: '40px', 
+                color: 'var(--brand-600)',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 16px'
+              }} 
+            />
+            <h3 style={{ 
+              fontSize: '16px', 
+              fontWeight: 600, 
+              color: 'var(--n-800)',
+              margin: '0 0 8px 0'
+            }}>
+              {previewStatus === 'loading' ? 'Preparing preview...' : 'Starting dev server...'}
+            </h3>
+            <p style={{ 
+              fontSize: '14px', 
+              color: 'var(--n-500)',
+              margin: 0
+            }}>
+              Installing dependencies and launching the component on an isolated port.
+              <br />
+              This may take a few moments.
+            </p>
+          </div>
+        ) : previewStatus === 'error' ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '48px',
+            maxWidth: '500px',
+          }}>
+            <AlertCircle 
+              style={{ 
+                width: '40px', 
+                height: '40px', 
+                color: 'var(--danger-600)',
+                margin: '0 auto 16px'
+              }} 
+            />
+            <h3 style={{ 
+              fontSize: '16px', 
+              fontWeight: 600, 
+              color: 'var(--n-800)',
+              margin: '0 0 8px 0'
+            }}>
+              Failed to start preview
+            </h3>
+            <p style={{ 
+              fontSize: '14px', 
+              color: 'var(--n-500)',
+              margin: '0 0 16px 0'
+            }}>
+              {errorMessage}
+            </p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white"
+            >
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <div style={{
+            width: viewModes.find(m => m.id === viewMode)?.width,
+            maxWidth: '100%',
+            height: isFullscreen ? '100%' : 'calc(100vh - 180px)',
+            backgroundColor: 'var(--n-0)',
+            borderRadius: isFullscreen ? 0 : 'var(--radius-md)',
+            border: isFullscreen ? 'none' : '1px solid var(--n-200)',
+            boxShadow: isFullscreen ? 'none' : 'var(--shadow-card)',
+            overflow: 'hidden',
+            transition: 'width var(--transition-base)',
+          }}>
+            <iframe
+              src={iframeSrc}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+              }}
+              title={componentId}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

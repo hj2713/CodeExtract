@@ -9,40 +9,50 @@ import { randomUUID } from "crypto";
 
 // Get or create source from GitHub URL
 export async function getOrCreateSource(githubUrl: string) {
-  console.log("[getOrCreateSource] Called with:", githubUrl);
-  
-  // Check if source already exists
-  const existing = await db
-    .select()
-    .from(sources)
-    .where(eq(sources.originUrl, githubUrl));
+  try {
+    console.log("[getOrCreateSource] Called with:", githubUrl);
+    
+    // Validate input
+    if (!githubUrl || typeof githubUrl !== 'string') {
+      throw new Error("Invalid GitHub URL provided");
+    }
+    
+    // Check if source already exists
+    const existing = await db
+      .select()
+      .from(sources)
+      .where(eq(sources.originUrl, githubUrl));
 
-  console.log("[getOrCreateSource] Existing sources found:", existing.length);
+    console.log("[getOrCreateSource] Existing sources found:", existing.length);
 
-  if (existing.length > 0) {
-    console.log("[getOrCreateSource] Returning existing source:", existing[0].id);
-    return existing[0];
+    if (existing.length > 0) {
+      console.log("[getOrCreateSource] Returning existing source:", existing[0].id);
+      return existing[0];
+    }
+
+    // Create new source
+    const id = randomUUID();
+    const name = githubUrl.split("/").slice(-2).join("/"); // owner/repo
+
+    console.log("[getOrCreateSource] Creating new source with id:", id, "name:", name);
+
+    await db.insert(sources).values({
+      id,
+      name,
+      type: "github_repo",
+      originUrl: githubUrl,
+      analysisStatus: "pending",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const created = await db.select().from(sources).where(eq(sources.id, id));
+    console.log("[getOrCreateSource] Created source:", created[0]?.id);
+    return created[0];
+  } catch (error) {
+    console.error("[getOrCreateSource] Error:", error);
+    throw new Error(`Failed to create source: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-
-  // Create new source
-  const id = randomUUID();
-  const name = githubUrl.split("/").slice(-2).join("/"); // owner/repo
-
-  console.log("[getOrCreateSource] Creating new source with id:", id, "name:", name);
-
-  await db.insert(sources).values({
-    id,
-    name,
-    type: "github_repo",
-    originUrl: githubUrl,
-    analysisStatus: "pending",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-
-  const created = await db.select().from(sources).where(eq(sources.id, id));
-  console.log("[getOrCreateSource] Created source:", created[0]?.id);
-  return created[0];
 }
 
 // Get source by ID
