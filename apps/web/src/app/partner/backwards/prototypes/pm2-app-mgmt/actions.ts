@@ -71,13 +71,17 @@ export async function stopApp(
 export async function restartApp(
   id: string
 ): Promise<{ success: true; app: AppInfo } | { success: false; error: string }> {
+  console.log("[actions] restartApp called for:", id);
   try {
     const app = await orchestratorRestartApp(id);
+    console.log("[actions] restartApp success:", app.status);
     return { success: true, app };
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("[actions] restartApp error:", errorMsg);
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMsg,
     };
   }
 }

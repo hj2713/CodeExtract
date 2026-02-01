@@ -1,0 +1,33 @@
+{
+  "jobId": "fb301f52-14ac-4c8c-92a9-fe5634995137",
+  "name": "extract-the-waitlist",
+  "status": "failed",
+  "stepProgress": [
+    {
+      "stepId": "create-nextjs",
+      "status": "error",
+      "error": "Failed to create Next.js app: "
+    },
+    {
+      "stepId": "create-folders",
+      "status": "pending"
+    },
+    {
+      "stepId": "clone-repo",
+      "status": "pending"
+    },
+    {
+      "stepId": "copy-templates",
+      "status": "pending"
+    },
+    {
+      "stepId": "run-claude",
+      "status": "pending"
+    }
+  ],
+  "currentStep": "create-nextjs",
+  "logs": "The directory \u001b[32mextract-the-waitlist\u001b[39m contains files that could conflict:\n\n  \u001b[34m.next\u001b[39m/\n  README.md\n  eslint.config.mjs\n  next-env.d.ts\n  next.config.ts\n  \u001b[34mnode_modules\u001b[39m/\n  package-lock.json\n  package.json\n  postcss.config.mjs\n  \u001b[34mpublic\u001b[39m/\n  \u001b[34msrc\u001b[39m/\n  tsconfig.json\n\nEither try using a new directory name, or remove the files listed above.\n\n",
+  "claudeStatus": "not_started",
+  "startedAt": "2026-02-01T03:18:14.473Z",
+  "completedAt": "2026-02-01T03:18:18.718Z"
+}

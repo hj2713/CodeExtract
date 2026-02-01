@@ -17,6 +17,19 @@ const execAsync = promisify(exec);
 // Constants
 const NAMESPACE = "app-orchestrator";
 
+// Simple logger that writes to a debug file
+async function log(message: string, data?: unknown): Promise<void> {
+  const timestamp = new Date().toISOString();
+  const logLine = `[${timestamp}] ${message}${data ? ` ${JSON.stringify(data, null, 2)}` : ""}\n`;
+  console.log("[pm2-orchestrator]", message, data || "");
+  try {
+    const logPath = path.join(getProjectRoot(), "debug.log");
+    await fs.appendFile(logPath, logLine);
+  } catch {
+    // Ignore logging errors
+  }
+}
+
 // Get project root - in Next.js, process.cwd() returns the apps/web directory
 // So we need to navigate from there to our pm2-app-mgmt directory
 function getProjectRoot(): string {
@@ -55,39 +68,82 @@ async function pm2List(): Promise<PM2ProcessDescription[]> {
     const { stdout } = await execAsync("npx pm2 jlist", {
       cwd: PROJECT_ROOT,
     });
-    const processes = JSON.parse(stdout) as PM2ProcessDescription[];
+
+    // pm2 jlist may output warning messages before the JSON
+    // Find the JSON array start (first '[' character)
+    const jsonStart = stdout.indexOf("[");
+    if (jsonStart === -1) {
+      await log("pm2List: no JSON array found in output", { stdout: stdout.slice(0, 200) });
+      return [];
+    }
+
+    const jsonStr = stdout.slice(jsonStart);
+    const processes = JSON.parse(jsonStr) as PM2ProcessDescription[];
+    await log("pm2List raw processes", { count: processes.length });
+
     // Filter to our namespace
-    return processes.filter(
+    const filtered = processes.filter(
       (p) => p.pm2_env?.namespace === NAMESPACE
     );
-  } catch {
+    await log("pm2List filtered to namespace", {
+      namespace: NAMESPACE,
+      count: filtered.length,
+      processes: filtered.map(p => ({
+        name: p.name,
+        pm_id: p.pm_id,
+        status: p.pm2_env?.status,
+        port: p.pm2_env?.PORT
+      }))
+    });
+    return filtered;
+  } catch (error) {
+    await log("pm2List error", { error: String(error) });
     return [];
   }
 }
 
 async function pm2Start(options: PM2StartOptions): Promise<void> {
-  const envArgs = Object.entries(options.env)
-    .map(([k, v]) => `${k}=${v}`)
-    .join(" ");
+  await log("pm2Start called", { options });
 
+  // Build the command with proper escaping
   const cmd = [
-    "start",
-    `"${options.script}"`,
-    "--name", `"${options.name}"`,
+    "npx", "pm2", "start", options.script,
+    "--name", options.name,
     "--namespace", NAMESPACE,
-    "--cwd", `"${options.cwd}"`,
-    "--output", `"${options.output}"`,
-    "--error", `"${options.error}"`,
+    "--cwd", options.cwd,
+    "--output", options.output,
+    "--error", options.error,
     "--no-autorestart",
-    "--",
-    options.args || "",
+    "--", options.args || "",
   ].join(" ");
 
-  // Set environment and run
-  await execAsync(`${envArgs} npx pm2 ${cmd}`, {
-    cwd: PROJECT_ROOT,
-    env: { ...process.env, ...options.env as Record<string, string> },
-  });
+  await log("Executing pm2 command", { cmd, cwd: PROJECT_ROOT });
+
+  try {
+    // Pass PORT as environment variable
+    const env = {
+      ...process.env,
+      PORT: String(options.env.PORT),
+      CATEGORY: String(options.env.CATEGORY || ""),
+    };
+
+    const { stdout, stderr } = await execAsync(cmd, {
+      cwd: PROJECT_ROOT,
+      env,
+    });
+
+    await log("pm2 start success", { stdout, stderr });
+  } catch (error: unknown) {
+    const err = error as { stdout?: string; stderr?: string; message?: string; code?: number };
+    await log("pm2 start error", {
+      message: err.message,
+      stdout: err.stdout,
+      stderr: err.stderr,
+      code: err.code
+    });
+    // Re-throw with more context
+    throw new Error(`pm2 start failed: ${err.stderr || err.message}`);
+  }
 }
 
 async function pm2Stop(pmId: number): Promise<void> {
@@ -110,8 +166,11 @@ async function pm2Delete(pmId: number): Promise<void> {
 async function readManifest(): Promise<Manifest> {
   try {
     const data = await fs.readFile(MANIFEST_PATH, "utf-8");
-    return JSON.parse(data) as Manifest;
-  } catch {
+    const manifest = JSON.parse(data) as Manifest;
+    await log("readManifest success", { appCount: Object.keys(manifest.apps).length });
+    return manifest;
+  } catch (error) {
+    await log("readManifest error - returning empty manifest", { error: String(error), path: MANIFEST_PATH });
     // Return default manifest if file doesn't exist
     return {
       version: "1.0.0",
@@ -122,6 +181,7 @@ async function readManifest(): Promise<Manifest> {
 }
 
 async function writeManifest(manifest: Manifest): Promise<void> {
+  await log("writeManifest", { appCount: Object.keys(manifest.apps).length, apps: Object.keys(manifest.apps) });
   await fs.writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2), "utf-8");
 }
 
@@ -331,6 +391,8 @@ export async function stopApp(id: string): Promise<AppInfo> {
 }
 
 export async function restartApp(id: string): Promise<AppInfo> {
+  await log("restartApp called", { id });
+
   const manifest = await readManifest();
   const app = manifest.apps[id];
 
@@ -338,12 +400,25 @@ export async function restartApp(id: string): Promise<AppInfo> {
     throw new Error(`App not found: ${id}`);
   }
 
+  await log("Found app", { app });
+
   const absoluteDir = path.resolve(PROJECT_ROOT, app.directory);
   const pm2Name = `orch-${id}`;
   const logOutput = path.join(LOGS_DIR, `${pm2Name}-out.log`);
   const logError = path.join(LOGS_DIR, `${pm2Name}-error.log`);
 
+  await log("Paths resolved", { absoluteDir, pm2Name, logOutput, logError });
+
+  // Check if directory exists
+  try {
+    await fs.access(absoluteDir);
+    await log("App directory exists", { absoluteDir });
+  } catch {
+    throw new Error(`App directory does not exist: ${absoluteDir}`);
+  }
+
   if (app.pmId === null || app.status === "unknown") {
+    await log("Starting new pm2 process (no existing pmId or status unknown)");
     // Re-register with pm2
     await pm2Start({
       script: "npm",
@@ -362,10 +437,13 @@ export async function restartApp(id: string): Promise<AppInfo> {
       max_restarts: 0,
     });
   } else {
+    await log("Restarting existing pm2 process", { pmId: app.pmId });
     await pm2Restart(app.pmId);
   }
 
+  await log("Syncing manifest after restart");
   const syncedManifest = await sync();
+  await log("Restart complete", { app: syncedManifest.apps[id] });
   return syncedManifest.apps[id];
 }
 

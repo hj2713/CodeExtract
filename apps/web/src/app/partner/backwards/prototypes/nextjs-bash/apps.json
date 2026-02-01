@@ -98,5 +98,101 @@
         "status": "completed"
       }
     ]
+  },
+  {
+    "id": "1c99256d-0c9a-432d-bd10-98a123175b72",
+    "name": "testthisworks",
+    "createdAt": "2026-01-31T21:23:18.483Z",
+    "status": "ready",
+    "stepProgress": [
+      {
+        "stepId": "create-nextjs",
+        "status": "completed"
+      },
+      {
+        "stepId": "create-folders",
+        "status": "completed"
+      },
+      {
+        "stepId": "clone-repo",
+        "status": "completed"
+      },
+      {
+        "stepId": "copy-templates",
+        "status": "completed"
+      }
+    ]
+  },
+  {
+    "id": "f0906683-e1fa-4490-bcc1-d8c0e1b5bc1a",
+    "name": "hj",
+    "createdAt": "2026-01-31T22:00:52.643Z",
+    "status": "ready",
+    "stepProgress": [
+      {
+        "stepId": "create-nextjs",
+        "status": "completed"
+      },
+      {
+        "stepId": "create-folders",
+        "status": "completed"
+      },
+      {
+        "stepId": "clone-repo",
+        "status": "completed"
+      },
+      {
+        "stepId": "copy-templates",
+        "status": "completed"
+      }
+    ]
+  },
+  {
+    "id": "a4ba6fb6-52ef-4d17-9536-aa07cc2bd7e1",
+    "name": "testapp",
+    "createdAt": "2026-01-31T23:51:39.397Z",
+    "status": "ready",
+    "stepProgress": [
+      {
+        "stepId": "create-nextjs",
+        "status": "completed"
+      },
+      {
+        "stepId": "create-folders",
+        "status": "completed"
+      },
+      {
+        "stepId": "clone-repo",
+        "status": "completed"
+      },
+      {
+        "stepId": "copy-templates",
+        "status": "completed"
+      }
+    ]
+  },
+  {
+    "id": "dc7b0a40-273e-4a04-956e-0b08b4ed9b96",
+    "name": "hello",
+    "createdAt": "2026-02-01T01:12:42.978Z",
+    "status": "ready",
+    "stepProgress": [
+      {
+        "stepId": "create-nextjs",
+        "status": "completed"
+      },
+      {
+        "stepId": "create-folders",
+        "status": "completed"
+      },
+      {
+        "stepId": "clone-repo",
+        "status": "completed"
+      },
+      {
+        "stepId": "copy-templates",
+        "status": "completed"
+      }
+    ]
   }
 ]

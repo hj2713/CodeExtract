@@ -1,0 +1,33 @@
+{
+  "jobId": "91a885f6-dd58-4eaa-85f7-47b18fcba1bc",
+  "name": "the-grid-ui",
+  "status": "failed",
+  "stepProgress": [
+    {
+      "stepId": "create-nextjs",
+      "status": "error",
+      "error": "Failed to create Next.js app: "
+    },
+    {
+      "stepId": "create-folders",
+      "status": "pending"
+    },
+    {
+      "stepId": "clone-repo",
+      "status": "pending"
+    },
+    {
+      "stepId": "copy-templates",
+      "status": "pending"
+    },
+    {
+      "stepId": "run-claude",
+      "status": "pending"
+    }
+  ],
+  "currentStep": "create-nextjs",
+  "logs": "The directory \u001b[32mthe-grid-ui\u001b[39m contains files that could conflict:\n\n  \u001b[34m.next\u001b[39m/\n  README.md\n  eslint.config.mjs\n  extraction-result.json\n  next-env.d.ts\n  next.config.ts\n  \u001b[34mnode_modules\u001b[39m/\n  package-lock.json\n  package.json\n  postcss.config.mjs\n  \u001b[34mpublic\u001b[39m/\n  \u001b[34msrc\u001b[39m/\n  tsconfig.json\n\nEither try using a new directory name, or remove the files listed above.\n\n",
+  "claudeStatus": "not_started",
+  "startedAt": "2026-02-01T03:58:07.582Z",
+  "completedAt": "2026-02-01T03:58:12.504Z"
+}

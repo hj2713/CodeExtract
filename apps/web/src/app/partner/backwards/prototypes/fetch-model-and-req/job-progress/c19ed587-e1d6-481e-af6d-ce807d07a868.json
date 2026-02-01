@@ -1,0 +1,33 @@
+{
+  "jobId": "c19ed587-e1d6-481e-af6d-ce807d07a868",
+  "name": "the-grid-ui",
+  "status": "failed",
+  "stepProgress": [
+    {
+      "stepId": "create-nextjs",
+      "status": "completed"
+    },
+    {
+      "stepId": "create-folders",
+      "status": "completed"
+    },
+    {
+      "stepId": "clone-repo",
+      "status": "error",
+      "error": "Failed to clone repo: fatal: destination path '.' already exists and is not an empty directory.\n"
+    },
+    {
+      "stepId": "copy-templates",
+      "status": "pending"
+    },
+    {
+      "stepId": "run-claude",
+      "status": "pending"
+    }
+  ],
+  "currentStep": "clone-repo",
+  "logs": "fatal: destination path '.' already exists and is not an empty directory.\n",
+  "claudeStatus": "not_started",
+  "startedAt": "2026-02-01T04:02:08.750Z",
+  "completedAt": "2026-02-01T04:02:12.676Z"
+}

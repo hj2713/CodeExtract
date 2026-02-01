@@ -341,14 +341,19 @@ export default function PM2Dashboard() {
   const [selectedApp, setSelectedApp] = useState<AppInfo | null>(null);
   const [logs, setLogs] = useState<AppLogs | null>(null);
   const [filter, setFilter] = useState<string>("");
+  const [lastFetch, setLastFetch] = useState<string>("");
 
   // Fetch apps
   const fetchApps = useCallback(async () => {
     const result = await listApps();
+    console.log("[Dashboard] listApps result:", result);
     if (result.success) {
+      console.log("[Dashboard] Apps received:", result.apps.map(a => ({ name: a.name, status: a.status, port: a.port })));
       setApps(result.apps);
       setError(null);
+      setLastFetch(new Date().toLocaleTimeString());
     } else {
+      console.error("[Dashboard] listApps error:", result.error);
       setError(result.error);
     }
   }, []);
@@ -550,6 +555,115 @@ export default function PM2Dashboard() {
             </div>
           ))
         )}
+
+        {/* Running Processes Table */}
+        <div className="mt-12 border-t border-zinc-700 pt-8">
+          <h2 className="text-xl font-semibold mb-4 text-zinc-300">
+            Running Processes (Quick Links)
+          </h2>
+          <div className="bg-zinc-800 rounded-lg border border-zinc-700 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-zinc-900">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">Name</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">Port</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">PID</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">Link</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-zinc-400">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-700">
+                {apps.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-zinc-500">
+                      No processes found
+                    </td>
+                  </tr>
+                ) : (
+                  apps.map((app) => (
+                    <tr key={app.id} className="hover:bg-zinc-700/50">
+                      <td className="px-4 py-3 text-sm font-medium">{app.name}</td>
+                      <td className="px-4 py-3 text-sm text-zinc-400">{app.port}</td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={app.status} />
+                      </td>
+                      <td className="px-4 py-3 text-sm text-zinc-400 font-mono">
+                        {app.pid || "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        {app.status === "online" ? (
+                          <a
+                            href={`http://localhost:${app.port}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 underline text-sm"
+                          >
+                            localhost:{app.port}
+                          </a>
+                        ) : (
+                          <span className="text-zinc-500 text-sm">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          {app.status === "online" ? (
+                            <button
+                              onClick={() => handleStop(app.id)}
+                              disabled={actionLoading === app.id}
+                              className="px-2 py-1 text-xs bg-yellow-600 hover:bg-yellow-500 rounded disabled:opacity-50"
+                            >
+                              Stop
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleRestart(app.id)}
+                              disabled={actionLoading === app.id}
+                              className="px-2 py-1 text-xs bg-green-600 hover:bg-green-500 rounded disabled:opacity-50"
+                            >
+                              Start
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleRestart(app.id)}
+                            disabled={actionLoading === app.id}
+                            className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 rounded disabled:opacity-50"
+                          >
+                            Restart
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Debug info */}
+          <details className="mt-4" open>
+            <summary className="text-zinc-500 text-sm cursor-pointer hover:text-zinc-400">
+              Debug: Raw app data (Last fetch: {lastFetch || "never"})
+            </summary>
+            <div className="mt-2 p-4 bg-black rounded text-xs overflow-auto max-h-64">
+              <p className="text-yellow-400 mb-2">
+                Apps count: {apps.length} |
+                Online: {apps.filter(a => a.status === "online").length} |
+                actionLoading: {actionLoading || "null"}
+              </p>
+              <pre className="text-green-400">
+                {JSON.stringify(apps.map(a => ({
+                  id: a.id,
+                  name: a.name,
+                  status: a.status,
+                  port: a.port,
+                  pid: a.pid,
+                  pmId: a.pmId
+                })), null, 2)}
+              </pre>
+            </div>
+          </details>
+        </div>
       </div>
 
       {/* Modals */}

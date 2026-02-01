@@ -114,7 +114,7 @@ export async function POST(request: Request) {
 
 				// Step 1: Create Next.js app
 				sendEvent("step", { stepId: "create-nextjs", status: "running" });
-				const step1Command = `cd "${ROOT_DIR}" && npx create-next-app@latest "${sanitizedName}" --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm --yes`;
+				const step1Command = `npx create-next-app@latest "${appDir}" --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm --yes`;
 				const step1 = await runShellCommand(step1Command, (log) => sendLog("create-nextjs", log));
 				if (!step1.success) {
 					app.stepProgress![0] = { stepId: "create-nextjs", status: "error", error: step1.error };
