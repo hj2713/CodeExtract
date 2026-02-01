@@ -7,14 +7,14 @@ import {
 } from "@aws-sdk/client-sqs";
 
 const sqsClient = new SQSClient({
-  region: process.env.AWS_REGION || "us-east-2",
+  region: process.env.APP_AWS_REGION || "us-east-2",
   credentials: {
-    accessKeyId: process.env.AWS_USER_ACCESS_KEY!,
-    secretAccessKey: process.env.AWS_USER_SECRET_KEY!,
+    accessKeyId: process.env.APP_AWS_ACCESS_KEY!,
+    secretAccessKey: process.env.APP_AWS_SECRET_KEY!,
   },
 });
 
-const QUEUE_URL = process.env.AWS_SQS_QUEUE_URL!;
+const QUEUE_URL = process.env.APP_SQS_QUEUE_URL!;
 
 export interface SQSJobMessage {
   jobId: string;

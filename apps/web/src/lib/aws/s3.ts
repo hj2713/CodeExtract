@@ -1,14 +1,14 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || "us-east-2",
+  region: process.env.APP_AWS_REGION || "us-east-2",
   credentials: {
-    accessKeyId: process.env.AWS_USER_ACCESS_KEY!,
-    secretAccessKey: process.env.AWS_USER_SECRET_KEY!,
+    accessKeyId: process.env.APP_AWS_ACCESS_KEY!,
+    secretAccessKey: process.env.APP_AWS_SECRET_KEY!,
   },
 });
 
-const BUCKET_NAME = process.env.AWS_S3_BUCKET || "code-extract-screenshots";
+const BUCKET_NAME = process.env.APP_S3_BUCKET || "code-extract-screenshots";
 
 /**
  * Upload a base64 image to S3 and return the public URL
@@ -41,7 +41,7 @@ export async function uploadBase64ToS3(
   await s3Client.send(command);
 
   // Return the public URL
-  return `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION || "us-east-2"}.amazonaws.com/${key}`;
+  return `https://${BUCKET_NAME}.s3.${process.env.APP_AWS_REGION || "us-east-2"}.amazonaws.com/${key}`;
 }
 
 /**

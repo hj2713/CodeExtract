@@ -8,12 +8,12 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       sqs: {
-        queueUrl: process.env.AWS_SQS_QUEUE_URL,
+        queueUrl: process.env.APP_SQS_QUEUE_URL,
         ...sqsStats,
       },
       s3: {
-        bucket: process.env.AWS_S3_BUCKET,
-        region: process.env.AWS_REGION,
+        bucket: process.env.APP_S3_BUCKET,
+        region: process.env.APP_AWS_REGION,
       },
     });
   } catch (error) {
