@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, requirements } from "@my-better-t-app/db";
-import { eq } from "drizzle-orm";
+import { db, requirements, eq } from "@my-better-t-app/db";
 
 // PATCH /api/requirements/[id] - Update requirement status
 export async function PATCH(

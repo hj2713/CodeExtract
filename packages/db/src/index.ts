@@ -12,4 +12,4 @@ export const db = drizzle({ client, schema });
 
 // Re-export schema and operators for convenience
 export * from "./schema";
-export { eq, desc, asc, and, or, like, inArray } from "drizzle-orm";
+export { eq, desc, asc, and, or, like, inArray, lt, gt, sql, isNull, isNotNull, between, ne, gte, lte, not } from "drizzle-orm";

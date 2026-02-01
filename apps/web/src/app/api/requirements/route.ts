@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, requirements } from "@my-better-t-app/db";
-import { eq, desc } from "drizzle-orm";
+import { db, requirements, eq, desc } from "@my-better-t-app/db";
 import { v4 as uuid } from "uuid";
 
 // GET /api/requirements?sourceId=xxx

@@ -9,8 +9,7 @@
  */
 
 import dotenv from "dotenv";
-import { db, jobs } from "@my-better-t-app/db";
-import { eq, and, lt, sql } from "drizzle-orm";
+import { db, jobs, eq, and, lt, sql } from "@my-better-t-app/db";
 import * as fs from "fs/promises";
 import * as path from "path";
 

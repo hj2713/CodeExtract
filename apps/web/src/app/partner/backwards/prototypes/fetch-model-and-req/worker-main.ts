@@ -3,8 +3,7 @@
  * This module exports the worker functionality. Use run-worker.ts to start.
  */
 
-import { db, jobs } from "@my-better-t-app/db";
-import { and, eq, sql } from "drizzle-orm";
+import { db, jobs, and, eq, sql } from "@my-better-t-app/db";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { spawn } from "node:child_process";

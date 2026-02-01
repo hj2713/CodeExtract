@@ -1,7 +1,6 @@
 "use server";
 
-import { db, sources, type Source } from "@my-better-t-app/db";
-import { eq } from "drizzle-orm";
+import { db, sources, type Source, eq } from "@my-better-t-app/db";
 import type { CreateSourceInput, UpdateSourceInput, GithubMetadata, RepoInfo } from "./types";
 
 // ============================================================================

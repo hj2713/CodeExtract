@@ -2,8 +2,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import * as fs from "fs/promises";
 import * as path from "path";
-import { db, codeExamples, requirements, type CodeExample } from "@my-better-t-app/db";
-import { eq } from "drizzle-orm";
+import { db, codeExamples, requirements, type CodeExample, eq } from "@my-better-t-app/db";
 import type {
   CodeExampleWithRuntime,
   CreateCodeExampleOptions,

@@ -1,7 +1,6 @@
 "use server";
 
-import { db, requirements, sources, jobs, type Requirement, type Source, type Job } from "@my-better-t-app/db";
-import { eq } from "drizzle-orm";
+import { db, requirements, sources, jobs, type Requirement, type Source, type Job, eq } from "@my-better-t-app/db";
 import type { CreateRequirementInput, UpdateRequirementInput } from "./types";
 import { enqueue, type ClaudeExtractionPayload } from "../jobs-queue/queue";
 

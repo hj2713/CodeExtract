@@ -2,8 +2,7 @@
 
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
-import { db, sources, type Source } from "@my-better-t-app/db";
-import { eq } from "drizzle-orm";
+import { db, sources, type Source, eq } from "@my-better-t-app/db";
 import type {
 	CreateSourceInput,
 	UpdateSourceInput,

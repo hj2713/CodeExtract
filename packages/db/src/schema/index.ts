@@ -7,19 +7,87 @@ import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 
 export const sources = sqliteTable("sources", {
 	id: text("id").primaryKey(),
-	type: text("type", { enum: ["github_repo", "local_directory", "ai_prototype"] }).notNull(),
-	path: text("path"), // Local filesystem path after cloning
-	originUrl: text("origin_url"), // GitHub URL if applicable
-	description: text("description").notNull(),
-	analysisPath: text("analysis_path"), // Path to ANALYSIS.md if analysis completed
-	analysisConfirmed: integer("analysis_confirmed", { mode: "boolean" }).default(false),
-	createdAt: text("created_at")
-		.notNull()
-		.default(sql`(datetime('now'))`),
-	updatedAt: text("updated_at")
-		.notNull()
-		.default(sql`(datetime('now'))`),
-	// GitHub metadata stored as JSON (denormalized for simplicity)
+	name: text("name").notNull(),
+	
+	// Phase 1 & 2: Origin & Storage
+	type: text("type", { enum: ["github_repo", "local_directory", "ai_prototype"] }).notNull().default("github_repo"),
+	originUrl: text("origin_url"), // The GitHub URL
+	description: text("description"), // User-provided description of the codebase
+	localPath: text("local_path"), // Where it's cloned locally
+	
+	// Input type tracking (github, screenshot, live_url)
+	inputType: text("input_type", { enum: ["github", "screenshot", "live_url"] }).notNull().default("github"),
+	
+	// Visual capture data (for screenshot and live_url sources)
+	visualData: text("visual_data", { mode: "json" }).$type<{
+		screenshotBase64?: string;
+		allScreenshots?: string[];
+		screenshotUrl?: string;
+		capturedUrl?: string;
+		capturedScreenshot?: string;
+		capturedHtml?: string;
+	} | null>(),
+	
+	// Vision analysis results (from Gemini/Claude)
+	visionAnalysis: text("vision_analysis", { mode: "json" }).$type<{
+		componentType: string;
+		description: string;
+		layout: {
+			type: "flex" | "grid" | "absolute" | "block";
+			direction?: string;
+			alignment?: string;
+			gap?: string;
+		};
+		colors: {
+			primary: string;
+			secondary?: string;
+			background: string;
+			text: string;
+			accent?: string;
+		};
+		typography: {
+			fontFamily: string;
+			heading?: { size: string; weight: string };
+			body?: { size: string; weight: string };
+		};
+		spacing: {
+			padding?: string;
+			margin?: string;
+			gap?: string;
+		};
+		borders?: {
+			width?: string;
+			color?: string;
+			radius?: string;
+		};
+		shadows?: string;
+		interactions: Array<{
+			trigger: "hover" | "click" | "focus";
+			effect: string;
+			timing?: string;
+		}>;
+		animations: Array<{
+			element: string;
+			type: string;
+			duration: string;
+		}>;
+		responsive: {
+			mobile?: string;
+			tablet?: string;
+			desktop?: string;
+		};
+		accessibility: {
+			ariaLabels?: string[];
+			keyboardNav?: string;
+		};
+		assets: Array<{
+			type: "icon" | "image" | "illustration" | "logo";
+			description: string;
+			fallback?: string;
+		}>;
+	} | null>(),
+
+	// GitHub Metadata
 	githubMetadata: text("github_metadata", { mode: "json" }).$type<{
 		owner: string;
 		repo: string;
@@ -27,8 +95,27 @@ export const sources = sqliteTable("sources", {
 		description: string | null;
 		stars: number | null;
 		forks: number | null;
-		fetchedAt: string | null;
+		fetchedAt?: string | null;
 	} | null>(),
+
+	// Analysis Process
+	analysisStatus: text("analysis_status").notNull().default("pending"),
+	analysisPath: text("analysis_path"), // Path to the generated ANALYSIS.md file
+	analysisMarkdown: text("analysis_markdown"), // Content of ANALYSIS.md
+	analysisConfirmed: integer("analysis_confirmed", { mode: "boolean" }).default(false),
+
+	// Context (Populated by Analysis Agent)
+	techStack: text("tech_stack", { mode: "json" }).$type<string[]>(),
+	dependencies: text("dependencies", { mode: "json" }).$type<string[]>(),
+	components: text("components", { mode: "json" }).$type<{
+		name: string;
+		description: string;
+		filePath: string;
+	}[]>(),
+
+	url: text("url"), // Legacy/Optional
+	createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+	updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 // Type inference helpers
@@ -81,25 +168,58 @@ export type NewJob = typeof jobs.$inferInsert;
 // Requirements Table - specific implementation patterns to extract from a source
 // ============================================================================
 
-export const requirements = sqliteTable(
-	"requirements",
-	{
-		id: text("id").primaryKey(),
-		sourceId: text("source_id")
-			.notNull()
-			.references(() => sources.id, { onDelete: "cascade" }),
-		jobId: text("job_id").references(() => jobs.id, { onDelete: "set null" }),
-		requirement: text("requirement").notNull(),
-		context: text("context"),
-		createdAt: text("created_at")
-			.notNull()
-			.default(sql`(datetime('now'))`),
-	},
-	(table) => [
-		index("requirements_source_id_idx").on(table.sourceId),
-		index("requirements_job_id_idx").on(table.jobId),
-	]
-);
+export const requirements = sqliteTable("requirements", {
+	id: text("id").primaryKey(),
+	sourceId: text("source_id").notNull(),
+	
+	// Reference to the job processing this requirement (Phase 4 extraction)
+	jobId: text("job_id"),
+	
+	// Reference to the conversation this requirement came from
+	conversationId: text("conversation_id"),
+	
+	// The core requirement - DETAILED technical specification of what to extract
+	requirement: text("requirement").notNull(),
+	
+	// Additional context gathered from the interview
+	context: text("context"),
+	
+	// Title/name for this requirement (short summary)
+	title: text("title"),
+	
+	// Status: draft (still chatting), saved (user clicked save), extracting (in phase 4), completed
+	status: text("status").notNull().default("draft"),
+	
+	// JSON: Key files/components identified as relevant to this requirement
+	relevantFiles: text("relevant_files"),
+	
+	// JSON: Dependencies needed for this requirement
+	dependencies: text("dependencies"),
+	
+	// JSON: Detailed technical specifications for extraction phase
+	technicalSpecs: text("technical_specs"),
+	
+	// Implementation notes, gotchas, patterns to follow
+	implementationNotes: text("implementation_notes"),
+	
+	// JSON: Array of reference images for visual extraction
+	images: text("images", { mode: "json" }).$type<Array<{
+		base64: string;
+		caption?: string;
+		type?: "screenshot" | "reference" | "mockup";
+		addedAt: string;
+	}> | null>(),
+	
+	// Chat summary - AI-generated summary of the conversation leading to this requirement
+	chatSummary: text("chat_summary"),
+	
+	// Priority order (for multiple requirements in same session)
+	priority: text("priority").default("1"),
+	
+	// Timestamps
+	createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+	updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
+});
 
 // Type inference helpers for requirements
 export type Requirement = typeof requirements.$inferSelect;

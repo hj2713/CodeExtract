@@ -837,11 +837,22 @@ export default function Page() {
 
 	return (
 		<div className="p-8 max-w-6xl mx-auto space-y-8">
-			<div>
-				<h1 className="font-mono text-xl font-bold mb-1">queue</h1>
-				<p className="font-mono text-sm text-muted-foreground">
-					requirements and jobs
-				</p>
+			<div className="flex items-center justify-between">
+				<div>
+					<h1 className="font-mono text-xl font-bold mb-1">Extraction Queue</h1>
+					<p className="font-mono text-sm text-muted-foreground">
+						Phase 4: Code Extraction Pipeline
+					</p>
+				</div>
+				<a 
+					href="/himanshu" 
+					className="font-mono text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 border border-foreground/10 px-3 py-2 hover:border-foreground/30"
+				>
+					<svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+					</svg>
+					Back to Interview
+				</a>
 			</div>
 
 			{/* Queue Visualization */}

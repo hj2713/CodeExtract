@@ -19,7 +19,8 @@ import {
   X,
   ZoomIn,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -500,20 +501,22 @@ export function RequirementsSidebar({
           </div>
         </ScrollArea>
 
-        {/* Footer - Start Extraction CTA */}
+        {/* Footer - Proceed to Phase 4 CTA */}
         {savedRequirements.length > 0 && (
-          <div className="p-3 border-t border-gray-200">
+          <div className="p-3 border-t border-gray-200 space-y-2">
             <Button
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg"
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg"
               onClick={() => {
-                savedRequirements.forEach((req) => {
-                  handleStartExtraction(req.id);
-                });
+                window.location.href = "/partner/backwards/prototypes/fetch-model-and-req";
               }}
             >
               <Rocket className="w-4 h-4 mr-2" />
-              Extract All ({savedRequirements.length})
+              Proceed to Extraction
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
+            <p className="text-xs text-gray-500 text-center">
+              {savedRequirements.length} requirement{savedRequirements.length > 1 ? 's' : ''} ready for extraction
+            </p>
           </div>
         )}
       </div>
