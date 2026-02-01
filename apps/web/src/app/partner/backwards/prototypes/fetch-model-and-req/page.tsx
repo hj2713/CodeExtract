@@ -745,74 +745,173 @@ function QueueVisualization({
 
 	const pendingJobs = jobs.filter((j) => j.status === "pending");
 	const claimedJobs = jobs.filter((j) => j.status === "claimed");
-	const queuedJobs = [...pendingJobs, ...claimedJobs];
-
-	// Calculate opacity based on attempts (more attempts = more faded)
-	const getJobOpacity = (job: Job): number => {
-		const attempts = job.attempts ?? 0;
-		const maxAttempts = job.maxAttempts ?? 3;
-		const attemptRatio = attempts / maxAttempts;
-		// 0 attempts = 100%, 1 attempt = 80%, 2 attempts = 60%, 3 attempts = 40%
-		return Math.max(0.4, 1 - attemptRatio * 0.6);
-	};
+	const completedJobs = jobs.filter((j) => j.status === "completed");
+	const failedJobs = jobs.filter((j) => j.status === "failed");
 
 	return (
-		<div className="space-y-4">
-			{/* Stats */}
-			<div className="flex items-center gap-8 font-mono text-sm">
-				<div>
-					<span className="text-muted-foreground">pending</span>
-					<span className="ml-2 font-bold">{stats.pending}</span>
+		<div className="space-y-3">
+			{/* Modern Stats Bar */}
+			<div className="flex items-center gap-1 font-mono text-xs">
+				<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800/80 border border-zinc-700/50">
+					<div className="size-2 rounded-full bg-zinc-400" />
+					<span className="text-zinc-400">{stats.pending}</span>
 				</div>
-				<div>
-					<span className="text-muted-foreground">processing</span>
-					<span className="ml-2 font-bold">{stats.claimed}</span>
+				<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+					<div className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+					<span className="text-emerald-400">{stats.claimed}</span>
 				</div>
-				<div>
-					<span className="text-muted-foreground">completed</span>
-					<span className="ml-2 font-bold">{stats.completed}</span>
+				<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+					<div className="size-2 rounded-full bg-blue-400" />
+					<span className="text-blue-400">{stats.completed}</span>
 				</div>
-				<div>
-					<span className="text-muted-foreground">failed</span>
-					<span className="ml-2 font-bold">{stats.failed}</span>
-				</div>
+				{stats.failed > 0 && (
+					<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20">
+						<div className="size-2 rounded-full bg-red-400" />
+						<span className="text-red-400">{stats.failed}</span>
+					</div>
+				)}
 				<div className="ml-auto">
 					<QueueMenu onRefresh={onRefresh} />
 				</div>
 			</div>
 
-			{/* Queue Container */}
-			<div className="border border-foreground/20 h-16 flex items-center px-2 overflow-hidden">
-				{queuedJobs.length === 0 ? (
-					<span className="font-mono text-xs text-muted-foreground">
-						empty
-					</span>
-				) : (
-					<div className="flex gap-1 items-center h-full py-2">
-						{queuedJobs.map((job) => {
-							const attempts = job.attempts ?? 0;
-							const maxAttempts = job.maxAttempts ?? 3;
-							return (
-								<div
-									key={job.id}
-									className={`
-										h-full w-12 bg-foreground transition-all duration-300
-										${animatingIds.has(job.id) ? "animate-pulse scale-105" : ""}
-									`}
-									style={{ opacity: getJobOpacity(job) }}
-									title={`${job.id.slice(0, 8)} - ${job.type} (${job.status}, attempt ${attempts}/${maxAttempts})`}
-								/>
-							);
-						})}
+			{/* Queue Pipeline */}
+			<div className="relative">
+				{/* Pipeline Track */}
+				<div className="h-14 rounded-xl bg-gradient-to-r from-zinc-900 via-zinc-800/50 to-zinc-900 border border-zinc-700/30 backdrop-blur-sm overflow-hidden">
+					{/* Animated flow lines */}
+					<div className="absolute inset-0 overflow-hidden">
+						<div 
+							className="absolute inset-y-0 w-[200%] opacity-[0.03]"
+							style={{
+								backgroundImage: `repeating-linear-gradient(90deg, transparent 0px, transparent 40px, currentColor 40px, currentColor 41px)`,
+								animation: 'flowRight 20s linear infinite',
+							}}
+						/>
+					</div>
+					
+					{/* Center line */}
+					<div className="absolute top-1/2 left-4 right-4 h-px bg-gradient-to-r from-zinc-700 via-zinc-600 to-zinc-700 -translate-y-1/2" />
+					
+					{/* Jobs */}
+					<div className="relative h-full flex items-center px-4 gap-3">
+						{claimedJobs.length === 0 && pendingJobs.length === 0 ? (
+							<div className="flex-1 flex items-center justify-center gap-2 text-zinc-500">
+								<span className="font-mono text-sm">Ready for jobs</span>
+								<span className="text-zinc-600">•</span>
+								<span className="font-mono text-xs text-zinc-600">click pew to queue</span>
+							</div>
+						) : (
+							<>
+								{/* Processing indicator */}
+								{claimedJobs.length > 0 && (
+									<div className="flex items-center gap-2">
+										<div className="relative">
+											{/* Glow effect */}
+											<div className="absolute -inset-1 bg-emerald-500/20 rounded-lg blur-sm animate-pulse" />
+											
+											{/* Processing job card */}
+											<div className="relative flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 backdrop-blur-sm">
+												<div className="relative size-6">
+													{/* Spinner */}
+													<svg className="size-6 animate-spin text-emerald-400" viewBox="0 0 24 24">
+														<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
+														<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+													</svg>
+												</div>
+												<div className="flex flex-col">
+													<span className="font-mono text-xs text-emerald-300 font-medium">Processing</span>
+													<span className="font-mono text-[10px] text-emerald-400/60">{claimedJobs.length} active</span>
+												</div>
+											</div>
+										</div>
+										
+										{/* Flow arrow */}
+										{pendingJobs.length > 0 && (
+											<svg className="size-4 text-zinc-600" fill="none" viewBox="0 0 24 24">
+												<path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M8 12h8m0 0l-3-3m3 3l-3 3" />
+											</svg>
+										)}
+									</div>
+								)}
+								
+								{/* Pending jobs queue */}
+								{pendingJobs.length > 0 && (
+									<div className="flex items-center gap-1.5">
+										{pendingJobs.slice(0, 8).map((job, index) => {
+											const attempts = job.attempts ?? 0;
+											return (
+												<div
+													key={job.id}
+													className={`
+														group relative size-8 rounded-md transition-all duration-300 cursor-default
+														${animatingIds.has(job.id) ? "scale-110 ring-2 ring-yellow-400/50" : "hover:scale-105"}
+													`}
+													style={{ 
+														opacity: 1 - (index * 0.08),
+													}}
+													title={`${job.id.slice(0, 8)} • ${attempts > 0 ? `${attempts} retries` : 'queued'}`}
+												>
+													{/* Card */}
+													<div className="absolute inset-0 rounded-md bg-gradient-to-br from-zinc-600 to-zinc-700 border border-zinc-500/30 shadow-lg shadow-black/20" />
+													
+													{/* Shine effect on hover */}
+													<div className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-white/10 to-transparent" />
+													
+													{/* Queue position */}
+													<div className="absolute inset-0 flex items-center justify-center">
+														<span className="font-mono text-[10px] font-bold text-zinc-300">{index + 1}</span>
+													</div>
+													
+													{/* Retry indicator */}
+													{attempts > 0 && (
+														<div className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-amber-500 border border-zinc-800" />
+													)}
+												</div>
+											);
+										})}
+										
+										{/* Overflow indicator */}
+										{pendingJobs.length > 8 && (
+											<div className="flex items-center justify-center px-2 py-1 rounded-md bg-zinc-800/80 border border-zinc-700/50">
+												<span className="font-mono text-[10px] text-zinc-400">+{pendingJobs.length - 8}</span>
+											</div>
+										)}
+									</div>
+								)}
+							</>
+						)}
+					</div>
+				</div>
+				
+				{/* Mini completion trail */}
+				{(completedJobs.length > 0 || failedJobs.length > 0) && (
+					<div className="absolute -bottom-2 left-4 flex items-center gap-1">
+						{completedJobs.slice(0, 5).map((job) => (
+							<div 
+								key={job.id} 
+								className="size-1.5 rounded-full bg-blue-400/50" 
+								title={`Completed: ${job.id.slice(0, 8)}`}
+							/>
+						))}
+						{failedJobs.slice(0, 3).map((job) => (
+							<div 
+								key={job.id} 
+								className="size-1.5 rounded-full bg-red-400/50" 
+								title={`Failed: ${job.id.slice(0, 8)}`}
+							/>
+						))}
 					</div>
 				)}
 			</div>
-
-			{/* Labels */}
-			<div className="flex justify-between font-mono text-xs text-muted-foreground">
-				<span>front</span>
-				<span>back</span>
-			</div>
+			
+			{/* Add flow animation keyframes */}
+			<style dangerouslySetInnerHTML={{ __html: `
+				@keyframes flowRight {
+					from { transform: translateX(-50%); }
+					to { transform: translateX(0%); }
+				}
+			`}} />
 		</div>
 	);
 }

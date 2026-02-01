@@ -10,6 +10,7 @@ import {
 	createEchoJob,
 	retryFailedJob,
 	removeJob,
+	updateJobName,
 } from "./actions";
 import type { JobStats } from "./queue/types";
 
@@ -23,6 +24,140 @@ const TITLE_TEXT = `
 `;
 
 type StatusFilter = "all" | "pending" | "claimed" | "completed" | "failed";
+
+// ============================================================================
+// JobCard Component with Inline Name Editing
+// ============================================================================
+
+function JobCard({
+	job,
+	displayName,
+	getStatusStyle,
+	formatDate,
+	onRetry,
+	onDelete,
+	onUpdateName,
+}: {
+	job: Job;
+	displayName: string;
+	getStatusStyle: (status: string) => string;
+	formatDate: (date: string | null) => string;
+	onRetry: (id: string) => void;
+	onDelete: (id: string) => void;
+	onUpdateName: (name: string) => Promise<void>;
+}) {
+	const [isEditing, setIsEditing] = useState(false);
+	const [editValue, setEditValue] = useState(displayName);
+	const [isSaving, setIsSaving] = useState(false);
+
+	const handleSave = async () => {
+		if (editValue.trim() && editValue !== displayName) {
+			setIsSaving(true);
+			await onUpdateName(editValue.trim());
+			setIsSaving(false);
+		}
+		setIsEditing(false);
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter") {
+			handleSave();
+		} else if (e.key === "Escape") {
+			setEditValue(displayName);
+			setIsEditing(false);
+		}
+	};
+
+	return (
+		<div className="rounded-none border p-3 hover:border-foreground/30 transition-colors">
+			<div className="flex items-start justify-between gap-2">
+				<div className="min-w-0 flex-1">
+					<div className="flex items-center gap-2 flex-wrap">
+						<code className="font-mono text-xs text-muted-foreground">
+							{job.id.slice(0, 8)}
+						</code>
+						<span
+							className={`rounded-none border px-1.5 py-0.5 font-mono text-xs ${getStatusStyle(job.status)}`}
+						>
+							{job.status}
+						</span>
+						
+						{/* Editable Name */}
+						{isEditing ? (
+							<div className="flex items-center gap-1">
+								<Input
+									type="text"
+									value={editValue}
+									onChange={(e) => setEditValue(e.target.value)}
+									onBlur={handleSave}
+									onKeyDown={handleKeyDown}
+									className="h-6 px-1.5 py-0 font-mono text-sm w-48"
+									autoFocus
+									disabled={isSaving}
+								/>
+								{isSaving && (
+									<span className="text-xs text-muted-foreground">Saving...</span>
+								)}
+							</div>
+						) : (
+							<button
+								type="button"
+								onClick={() => setIsEditing(true)}
+								className="font-mono text-sm hover:text-primary transition-colors text-left truncate max-w-xs group flex items-center gap-1"
+								title="Click to edit name"
+							>
+								<span className="truncate">{displayName}</span>
+								<svg 
+									className="size-3 opacity-0 group-hover:opacity-50 transition-opacity shrink-0" 
+									fill="none" 
+									stroke="currentColor" 
+									viewBox="0 0 24 24"
+								>
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+								</svg>
+							</button>
+						)}
+					</div>
+					<div className="mt-1 font-mono text-xs text-muted-foreground">
+						Attempts: {job.attempts}/{job.maxAttempts} | Created:{" "}
+						{formatDate(job.createdAt)}
+					</div>
+					{job.lastError && (
+						<div className="mt-1 rounded-none border border-red-500/50 bg-red-500/10 p-1 font-mono text-xs text-red-400">
+							{job.lastError}
+						</div>
+					)}
+				</div>
+				<div className="flex gap-1 shrink-0">
+					{job.status === "failed" && (
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={() => onRetry(job.id)}
+							className="font-mono text-xs"
+						>
+							Retry
+						</Button>
+					)}
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={() => onDelete(job.id)}
+						className="font-mono text-xs text-red-400 hover:text-red-300"
+					>
+						Delete
+					</Button>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+// ============================================================================
+// Main Page
+// ============================================================================
 
 export default function JobsQueuePage() {
 	const [jobs, setJobs] = useState<Job[]>([]);
@@ -210,56 +345,28 @@ export default function JobsQueuePage() {
 						</div>
 					) : (
 						<div className="space-y-2">
-							{jobs.map((job) => (
-								<div key={job.id} className="rounded-none border p-3">
-									<div className="flex items-start justify-between gap-2">
-										<div className="min-w-0 flex-1">
-											<div className="flex items-center gap-2">
-												<code className="font-mono text-xs text-muted-foreground">
-													{job.id.slice(0, 8)}
-												</code>
-												<span
-													className={`rounded-none border px-1.5 py-0.5 font-mono text-xs ${getStatusStyle(job.status)}`}
-												>
-													{job.status}
-												</span>
-												<span className="font-mono text-sm">{job.type}</span>
-											</div>
-											<div className="mt-1 font-mono text-xs text-muted-foreground">
-												Attempts: {job.attempts}/{job.maxAttempts} | Created:{" "}
-												{formatDate(job.createdAt)}
-											</div>
-											{job.lastError && (
-												<div className="mt-1 rounded-none border border-red-500/50 bg-red-500/10 p-1 font-mono text-xs text-red-400">
-													{job.lastError}
-												</div>
-											)}
-										</div>
-										<div className="flex gap-1">
-											{job.status === "failed" && (
-												<Button
-													type="button"
-													variant="outline"
-													size="sm"
-													onClick={() => handleRetry(job.id)}
-													className="font-mono text-xs"
-												>
-													Retry
-												</Button>
-											)}
-											<Button
-												type="button"
-												variant="ghost"
-												size="sm"
-												onClick={() => handleDelete(job.id)}
-												className="font-mono text-xs text-red-400 hover:text-red-300"
-											>
-												Delete
-											</Button>
-										</div>
-									</div>
-								</div>
-							))}
+							{jobs.map((job) => {
+								const payload = job.payload as Record<string, unknown> | null;
+								const jobName = payload?.name as string | undefined;
+								const jobMessage = payload?.message as string | undefined;
+								const displayName = jobName || jobMessage || job.type;
+								
+								return (
+									<JobCard 
+										key={job.id} 
+										job={job} 
+										displayName={displayName}
+										getStatusStyle={getStatusStyle}
+										formatDate={formatDate}
+										onRetry={handleRetry}
+										onDelete={handleDelete}
+										onUpdateName={async (newName) => {
+											await updateJobName(job.id, newName);
+											loadData();
+										}}
+									/>
+								);
+							})}
 						</div>
 					)}
 				</div>

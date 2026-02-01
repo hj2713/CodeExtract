@@ -98,6 +98,35 @@ export async function retryFailedJob(
 	}
 }
 
+// Update job name in payload
+export async function updateJobName(
+	jobId: string,
+	newName: string
+): Promise<{ success: boolean; job?: Job; error?: string }> {
+	try {
+		const job = await getJob(jobId);
+		if (!job) {
+			return { success: false, error: "Job not found" };
+		}
+		
+		// Update the name in the payload
+		const payload = job.payload as Record<string, unknown>;
+		payload.name = newName;
+		
+		// Update in database
+		const { db, jobs, eq } = await import("@my-better-t-app/db");
+		const [updated] = await db
+			.update(jobs)
+			.set({ payload })
+			.where(eq(jobs.id, jobId))
+			.returning();
+		
+		return { success: true, job: updated };
+	} catch (error) {
+		return { success: false, error: String(error) };
+	}
+}
+
 // ============================================================================
 // Delete - Remove jobs
 // ============================================================================
