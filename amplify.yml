@@ -14,6 +14,7 @@ applications:
           commands:
             - cp -r .next/static .next/standalone/apps/web/.next/static
             - cp -r public .next/standalone/apps/web/public 2>/dev/null || true
+            - cp .next/required-server-files.json .next/standalone/apps/web/.next/required-server-files.json
       artifacts:
         baseDirectory: .next/standalone/apps/web
         files:
