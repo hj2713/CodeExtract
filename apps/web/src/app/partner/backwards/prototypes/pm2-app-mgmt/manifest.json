@@ -15,7 +15,7 @@
       "pmId": 0,
       "pid": 86635,
       "status": "online",
-      "memoryMB": 12,
+      "memoryMB": 14,
       "cpuPercent": 0,
       "startedAt": 1769899621374,
       "restarts": 0,
@@ -46,8 +46,8 @@
       "pmId": 2,
       "pid": 1398,
       "status": "online",
-      "memoryMB": 44,
-      "cpuPercent": 0.3,
+      "memoryMB": 15,
+      "cpuPercent": 0,
       "startedAt": 1769924263217,
       "restarts": 0
     }

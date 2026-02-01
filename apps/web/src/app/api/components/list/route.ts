@@ -2,8 +2,25 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-export async function GET() {
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+
+export interface ComponentMetadata {
+  id: string;
+  name: string;
+  path: string;
+  description: string;
+  hasExtractedPage: boolean;
+  createdAt: Date;
+  reviewStatus: ReviewStatus;
+  prompt?: string;
+  originUrl?: string;
+}
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const statusFilter = searchParams.get('status') as ReviewStatus | null;
+
     const createdAppsPath = path.join(
       process.cwd(),
       'src/app/partner/backwards/prototypes/fetch-model-and-req/created-apps'
@@ -13,11 +30,11 @@ export async function GET() {
     const entries = fs.readdirSync(createdAppsPath, { withFileTypes: true });
     const componentDirs = entries.filter(entry => entry.isDirectory() && entry.name !== '.gitkeep');
 
-    const components = componentDirs.map(dir => {
+    const components: ComponentMetadata[] = componentDirs.map(dir => {
       const componentPath = path.join(createdAppsPath, dir.name);
-      
+
       // Try to read extraction-result.json for metadata
-      let metadata: any = {};
+      let metadata: Record<string, unknown> = {};
       try {
         const metadataPath = path.join(componentPath, 'extraction-result.json');
         if (fs.existsSync(metadataPath)) {
@@ -44,6 +61,9 @@ export async function GET() {
         path.join(componentPath, 'src/app/extracted/page.tsx')
       );
 
+      // Default reviewStatus to "pending" if not present
+      const reviewStatus = (metadata.reviewStatus as ReviewStatus) || 'pending';
+
       return {
         id: dir.name,
         name: dir.name
@@ -51,16 +71,25 @@ export async function GET() {
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' '),
         path: `/partner/gallery/${dir.name}`,
-        description: summary || metadata.description || 'Extracted component',
+        description: summary || (metadata.description as string) || 'Extracted component',
         hasExtractedPage,
         createdAt: fs.statSync(componentPath).birthtime,
+        reviewStatus,
+        prompt: metadata.prompt as string | undefined,
+        originUrl: metadata.originUrl as string | undefined,
       };
     });
 
-    // Sort by creation date (newest first)
-    components.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    // Filter by status if specified
+    let filteredComponents = components;
+    if (statusFilter) {
+      filteredComponents = components.filter(c => c.reviewStatus === statusFilter);
+    }
 
-    return NextResponse.json({ components });
+    // Sort by creation date (newest first)
+    filteredComponents.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    return NextResponse.json({ components: filteredComponents });
   } catch (error) {
     console.error('Error reading components:', error);
     return NextResponse.json(

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+created-apps/*
+the-goal-is-to-extract-a-fully-functional-and-reus

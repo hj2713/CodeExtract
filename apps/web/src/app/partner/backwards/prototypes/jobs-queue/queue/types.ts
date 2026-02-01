@@ -10,7 +10,7 @@ export type ClaudeExtractionPayload = {
 	prompt: string;
 	targetPath: string | null;
 	originUrl: string | null;
-	requirementId: string;
+	requirementId: string | null;
 	promptHash: string;
 };
 
