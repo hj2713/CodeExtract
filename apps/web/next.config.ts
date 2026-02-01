@@ -15,8 +15,6 @@ const nextConfig: NextConfig = {
 	typescript: {
 		ignoreBuildErrors: true,
 	},
-	// Empty turbopack config to acknowledge Turbopack usage
-	turbopack: {},
 };
 
 export default nextConfig;

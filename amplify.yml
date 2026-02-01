@@ -9,7 +9,7 @@ applications:
             - bun install
         build:
           commands:
-            - bun run build
+            - TURBOPACK=0 bun run build
       artifacts:
         baseDirectory: .next
         files:
