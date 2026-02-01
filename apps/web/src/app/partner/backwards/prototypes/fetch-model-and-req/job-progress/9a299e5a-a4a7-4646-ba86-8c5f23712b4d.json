@@ -1,0 +1,31 @@
+{
+  "jobId": "9a299e5a-a4a7-4646-ba86-8c5f23712b4d",
+  "name": "detailed-technical-specification-core-functionalit",
+  "status": "processing",
+  "stepProgress": [
+    {
+      "stepId": "create-nextjs",
+      "status": "completed"
+    },
+    {
+      "stepId": "create-folders",
+      "status": "completed"
+    },
+    {
+      "stepId": "clone-repo",
+      "status": "completed"
+    },
+    {
+      "stepId": "copy-templates",
+      "status": "completed"
+    },
+    {
+      "stepId": "run-claude",
+      "status": "running"
+    }
+  ],
+  "currentStep": "run-claude",
+  "logs": "[Claude] {\"type\":\"system\",\"subtype\":\"init\",\"cwd\":\"/Users/himanshujhawar/Desktop/Developing/Code Extract Brown...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Ay4cFd7YobVVdTfgzbgH...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Ay4cFd7YobVVdTfgzbgH...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"content\":\"EISDIR: illegal ...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Ay4cFd7YobVVdTfgzbgH...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"content\":\"<tool_use_error>...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01Ay4cFd7YobVVdTfgzbgH...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"content\":\"<tool_use_error>...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_019in6BKvJtRVQZCxWWiji...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01BGME8rBRWmmZsDBgZxp2Zw\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01NfnRjB48ZRwGSuRPMgF3...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01GZdVKtDVg9D58tzhbSxido\",\"...\n[Claude] {\"type\":\"assistant\",\"message\":{\"model\":\"claude-sonnet-4-5-20250929\",\"id\":\"msg_01XXPPbrPoPGVmEd6Qk8dy...\n[Claude] {\"type\":\"user\",\"message\":{\"role\":\"user\",\"content\":[{\"tool_use_id\":\"toolu_01Rt8Jy6XJ8f4ePNLvphhjEo\",\"...\n",
+  "claudeStatus": "running",
+  "startedAt": "2026-02-01T07:28:51.044Z"
+}

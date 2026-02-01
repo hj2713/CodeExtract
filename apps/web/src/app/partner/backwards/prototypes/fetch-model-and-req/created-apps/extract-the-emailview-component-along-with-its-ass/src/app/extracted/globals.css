@@ -1,0 +1,117 @@
+/* Ported from: source/src/index.css */
+/* EchoPilot Design System - High Contrast Accessibility Theme */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode - rarely used, dark mode is default for accessibility */
+    --background: 220 20% 97%;
+    --foreground: 220 20% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+
+    --primary: 200 100% 50%;
+    --primary-foreground: 220 20% 5%;
+
+    --secondary: 220 15% 90%;
+    --secondary-foreground: 220 20% 10%;
+
+    --muted: 220 15% 85%;
+    --muted-foreground: 220 15% 40%;
+
+    --accent: 160 100% 40%;
+    --accent-foreground: 220 20% 5%;
+
+    --destructive: 0 80% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 140 70% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 45 100% 50%;
+    --warning-foreground: 220 20% 10%;
+
+    --border: 220 15% 80%;
+    --input: 220 15% 85%;
+    --ring: 200 100% 50%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* High contrast dark mode - Primary theme for EchoPilot */
+    --background: 220 25% 6%;
+    --foreground: 60 30% 96%;
+
+    --card: 220 25% 10%;
+    --card-foreground: 60 30% 96%;
+
+    --popover: 220 25% 10%;
+    --popover-foreground: 60 30% 96%;
+
+    --primary: 180 100% 50%;
+    --primary-foreground: 220 25% 6%;
+
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 60 30% 96%;
+
+    --muted: 220 20% 15%;
+    --muted-foreground: 220 10% 60%;
+
+    --accent: 45 100% 55%;
+    --accent-foreground: 220 25% 6%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 60 30% 96%;
+
+    --success: 140 70% 50%;
+    --success-foreground: 220 25% 6%;
+
+    --warning: 45 100% 55%;
+    --warning-foreground: 220 25% 6%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 18%;
+    --ring: 180 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Focus styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Large text for accessibility */
+  html {
+    font-size: 18px;
+  }
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

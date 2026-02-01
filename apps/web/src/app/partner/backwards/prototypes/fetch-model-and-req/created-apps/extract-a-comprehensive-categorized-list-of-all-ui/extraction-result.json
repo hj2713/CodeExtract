@@ -1,0 +1,30 @@
+{
+  "jobId": "12104a5b-3dae-409c-abda-3d7fd32e4fca",
+  "requirementId": "6fe0544a-c488-4e24-84b6-ae5ca8ee62cd",
+  "name": "extract-a-comprehensive-categorized-list-of-all-ui",
+  "originUrl": "https://github.com/hj2713/echo-pilot",
+  "prompt": "You are extracting a code example from a source codebase into an isolated, runnable Next.js page.\n\n## Source\n\n**Path:** src/source\n**Analysis:** \nthis was cloned from github. this is a landing page\n\n## Target Directory\n\n**Path:** src/app/extracted\n\nIt contains the following files -- first you should read it. \nTHIS IS YOUR WORKING DIRECTORY\nYOU MUST DO YOUR BEST TO NOT CREATE MANY FOLDERS OR FILES OUTSIDE OF THIS DIRECTORY!\n\n- page.tsx — Next.js page demonstrating the requirement\n- actions.ts — Server actions or API calls (if needed)\n- types.ts — All TypeScript types/interfaces\n- utils.ts — Helper functions, fixtures, mocks\n- README.md — Explanation of the example\n\n## Requirement\n\nExtract and isolate: Extract a comprehensive, categorized list of all UI components used in the EchoPilot repository. This should include: 1) Core UI components like EmailList, EmailView, NarrationLog, NavLink, SettingsDialog, TranscriptPanel, and VoiceButton; 2) UI library components located in `src/components/ui/`, which are built using Radix UI primitives and styled with Tailwind CSS (include each component listed by name); 3) Pages/Routes (Index, NotFound); and 4) a list of React hooks used in the project. The listing should be based on the project's file structure and component usage as identified in the analysis document.\n\n## Additional Context\n\nThe user wants a comprehensive understanding of the available components to decide which ones to use or learn more about for their own project.\n\n## Dependency Handling\n\nAs you extract, you will encounter dependencies. Handle them as follows:\n\n**NPM packages:**\nIf genuinely required, include them and note in README. If only used for one small thing, consider inlining the logic instead.\n\n**Internal code from source repo:**\n- If portable (small, self-contained utility/type/hook): Copy it over with a comment noting origin (e.g., `// Ported from: src/utils/shapes.ts`)\n- If not portable (deeply entangled): Mock it with hardcoded values or fixture data\n- In both cases, do these in a seperate folder/file inside the working dir (\"extracted\")\n\n**Databases / APIs / Auth / External services:**\nAlways mock. Use hardcoded fixture data. Never require actual infrastructure.\nExample: Instead of database query, use `const MOCK_DATA = [...]`\nExample: Instead of auth, use `const CURRENT_USER = { id: \"user_1\", name: \"Demo User\" }`\n\n**State management:**\nSimplify to React useState/useReducer unless state management IS the pattern being extracted.\n\n## Output Requirements\n\nThe code example must be:\n1. **Runnable** — Works in a Next.js 14 app (app router)\n2. **Isolated** — No imports from source codebase\n3. **Minimal** — Only code necessary to demonstrate the requirement\n4. **Clear** — A developer understands the pattern in <5 minutes\n\n## README.md Must Include\n\n# [Requirement Title]\n\n## What this demonstrates\n[One paragraph explanation]\n\n## Original implementation\n[Brief description of how source repo did it]\n\nKey files from source:\n- [file path] — [what it did]\n- [file path] — [what it did]\n\n## Dependencies\n\n### NPM packages required\n- [package] — [why needed]\n\n### Code ported from source\n- [util name] from [original path] — [description]\n\n### Mocked in this example\n- [what was mocked] — [how it was mocked]\n\n## How to use\n[Any setup or usage instructions]\n\n---\n\nExecute: Analyze the source, extract relevant code, handle dependencies as encountered, produce the code example.\n",
+  "promptHash": "30efe2dc",
+  "appDir": "/Users/himanshujhawar/Desktop/Developing/Code Extract Brown Hack/my-better-t-app/apps/web/src/app/partner/backwards/prototypes/fetch-model-and-req/created-apps/extract-a-comprehensive-categorized-list-of-all-ui",
+  "sourceDir": "/Users/himanshujhawar/Desktop/Developing/Code Extract Brown Hack/my-better-t-app/apps/web/src/app/partner/backwards/prototypes/fetch-model-and-req/created-apps/extract-a-comprehensive-categorized-list-of-all-ui/source",
+  "extractedDir": "/Users/himanshujhawar/Desktop/Developing/Code Extract Brown Hack/my-better-t-app/apps/web/src/app/partner/backwards/prototypes/fetch-model-and-req/created-apps/extract-a-comprehensive-categorized-list-of-all-ui/src/app/extracted",
+  "startedAt": "2026-02-01T07:13:10.602Z",
+  "status": "completed",
+  "completedAt": "2026-02-01T07:20:16.956Z",
+  "durationMs": 426445,
+  "claudeRunId": "run_1769929992470_418a108e",
+  "claudeModel": "claude-sonnet-4-5-20250929",
+  "claudeTurns": 0,
+  "extractedFiles": [
+    "COMPONENT_SUMMARY.md",
+    "INDEX.md",
+    "QUICK_START.md",
+    "README.md",
+    "actions.ts",
+    "components",
+    "data.ts",
+    "page.tsx",
+    "types.ts",
+    "utils.ts"
+  ]
+}
