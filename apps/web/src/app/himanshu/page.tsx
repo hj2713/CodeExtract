@@ -108,6 +108,9 @@ function ExtractPageContent() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   
+  // Component mention for chat
+  const [mentionedComponent, setMentionedComponent] = useState<string | null>(null);
+  
   // Analysis progress
   const [analysisStep, setAnalysisStep] = useState(0);
   const analysisSteps = [
@@ -1136,6 +1139,9 @@ function ExtractPageContent() {
         requirements={requirements}
         analysisContent={analysisContent}
         onRefresh={refreshRequirements}
+        onComponentMention={(name) => {
+          setMentionedComponent(`I want to extract the ${name} component. Can you help me understand how it works?`);
+        }}
       />
 
       {/* Main chat area */}
@@ -1146,6 +1152,8 @@ function ExtractPageContent() {
           analysisContent={analysisContent}
           onRequirementSaved={refreshRequirements}
           images={source?.visualData?.allScreenshots || screenshotPreviews}
+          initialInput={mentionedComponent}
+          onInputConsumed={() => setMentionedComponent(null)}
         />
       </div>
     </div>

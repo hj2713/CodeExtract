@@ -23,6 +23,8 @@ interface InterviewChatProps {
   analysisContent: string | null;
   onRequirementSaved: () => void;
   images?: string[]; // Base64 encoded reference images
+  initialInput?: string | null; // Pre-filled input (e.g., from component mention)
+  onInputConsumed?: () => void; // Called after initialInput is set to clear the parent state
 }
 
 // Helper to get text content from message parts
@@ -42,12 +44,26 @@ export function InterviewChat({
   analysisContent,
   onRequirementSaved,
   images,
+  initialInput,
+  onInputConsumed,
 }: InterviewChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasStartedRef = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Set input value when initialInput changes (component mention)
+  useEffect(() => {
+    if (initialInput) {
+      setInputValue(initialInput);
+      // Focus the input
+      setTimeout(() => textareaRef.current?.focus(), 100);
+      // Clear the parent state so it can trigger again
+      onInputConsumed?.();
+    }
+  }, [initialInput, onInputConsumed]);
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -322,6 +338,7 @@ export function InterviewChat({
           <div className="flex gap-3">
             <div className="flex-1 relative">
               <textarea
+                ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
