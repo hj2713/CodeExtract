@@ -49,4 +49,8 @@ coverage
 tmp
 temp
 
+# Database
+*.db
 local.db
+apps/web/.sources/
+reference_phase1/

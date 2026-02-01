@@ -1,0 +1,1 @@
+ALTER TABLE `requirements` ADD `images` text;

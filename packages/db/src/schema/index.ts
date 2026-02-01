@@ -140,3 +140,91 @@ export const codeExamples = sqliteTable(
 // Type inference helpers for code examples
 export type CodeExample = typeof codeExamples.$inferSelect;
 export type NewCodeExample = typeof codeExamples.$inferInsert;
+
+// ============================================================================
+// NEW TABLES FROM MERGE - Conversations & Messages
+// ============================================================================
+
+/**
+ * Conversations table - stores chat sessions for each source
+ */
+export const conversations = sqliteTable("conversations", {
+	id: text("id").primaryKey(),
+	sourceId: text("source_id").references(() => sources.id),
+	userId: text("user_id").notNull().default("default-user"),
+	title: text("title"),
+	createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+	updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export type Conversation = typeof conversations.$inferSelect;
+export type NewConversation = typeof conversations.$inferInsert;
+
+/**
+ * Messages table - stores individual chat messages
+ */
+export const messages = sqliteTable("messages", {
+	id: text("id").primaryKey(),
+	conversationId: text("conversation_id").references(() => conversations.id),
+	role: text("role").notNull(), // "user" | "assistant"
+	content: text("content").notNull(),
+	createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+export type Message = typeof messages.$inferSelect;
+export type NewMessage = typeof messages.$inferInsert;
+
+/**
+ * Extraction Jobs table - stores finalized extraction jobs with Gemini-extracted structured info
+ * (Different purpose than the jobs queue table - this is for tracking extraction work)
+ */
+export const extractionJobs = sqliteTable("extraction_jobs", {
+	id: text("id").primaryKey(),
+	sourceId: text("source_id").notNull(),
+
+	// Component identification
+	componentName: text("component_name").notNull(),
+	filePath: text("file_path"),
+	description: text("description"),
+
+	// Status: finalized, locked
+	status: text("status").notNull().default("finalized"),
+
+	// JSON: Dependencies array
+	dependencies: text("dependencies"), // ["react", "openai"]
+
+	// JSON: Key requirements extracted from chat
+	keyRequirements: text("key_requirements"), // ["streaming", "typing indicator"]
+
+	// Mock strategy: fixture, api, none
+	mockStrategy: text("mock_strategy").default("fixture"),
+
+	// Textual summary of the conversation
+	chatSummary: text("chat_summary"),
+
+	// JSON: Related conversation IDs that contributed to this job
+	relatedConversationIds: text("related_conversation_ids"), // ["conv-1", "conv-2"]
+
+	// Optional user notes
+	userNotes: text("user_notes"),
+
+	// JSON: Source metadata (tech stack, global deps)
+	metadata: text("metadata"),
+
+	// Timestamps
+	createdAt: text("created_at").default(sql`(CURRENT_TIMESTAMP)`),
+	updatedAt: text("updated_at").default(sql`(CURRENT_TIMESTAMP)`),
+
+	// Batch identifier (timestamp when moved to next phase)
+	batchId: text("batch_id"),
+});
+
+export type ExtractionJob = typeof extractionJobs.$inferSelect;
+export type NewExtractionJob = typeof extractionJobs.$inferInsert;
+
+// ============================================================================
+// ARCHIVE TABLES - Preserving richer schemas from origin/main for reference
+// ============================================================================
+
+// Export archive tables
+export * from "./archive";
