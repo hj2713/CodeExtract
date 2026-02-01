@@ -8,8 +8,9 @@ export const sources = sqliteTable("sources", {
   name: text("name").notNull(),
   
   // Phase 1 & 2: Origin & Storage
-  type: text("type", { enum: ["github_repo", "local_directory"] }).notNull().default("github_repo"),
+  type: text("type", { enum: ["github_repo", "local_directory", "ai_prototype"] }).notNull().default("github_repo"),
   originUrl: text("origin_url"), // The GitHub URL
+  description: text("description"), // User-provided description of the codebase
   localPath: text("local_path"), // Where it's cloned locally
   
   // NEW: Input type tracking (github, screenshot, live_url)
@@ -99,8 +100,9 @@ export const sources = sqliteTable("sources", {
 
   // Phase 2: Analysis Process
   analysisStatus: text("analysis_status").notNull().default("pending"),
-  analysisPath: text("analysis_path"), // Path to the generated ANALYSIS.md (Legacy)
-  analysisMarkdown: text("analysis_markdown"), // Content of ANALYSIS.md (Phase 2 API Approach)
+  analysisPath: text("analysis_path"), // Path to the generated ANALYSIS.md file
+  analysisMarkdown: text("analysis_markdown"), // Content of ANALYSIS.md
+  analysisConfirmed: integer("analysis_confirmed", { mode: "boolean" }).default(false), // Whether user has reviewed and confirmed the analysis
 
   // Phase 3: Context (Populated by Analysis Agent)
   techStack: text("tech_stack", { mode: "json" }).$type<string[]>(),

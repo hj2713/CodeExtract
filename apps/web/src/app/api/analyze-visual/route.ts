@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeImage, generateVisualAnalysisMarkdown } from "@/lib/ai/vision-analyzer";
+import { analyzeImage, generateVisualAnalysisMarkdownLLM } from "@/lib/ai/vision-analyzer";
 import { db, sources, eq } from "@my-better-t-app/db";
 import { randomUUID } from "crypto";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
 
 export const maxDuration = 60;
 
@@ -76,8 +78,8 @@ export async function POST(request: NextRequest) {
     // Analyze the image with Gemini Vision
     const visionAnalysis = await analyzeImage(base64Image);
     
-    // Generate markdown summary for the chat
-    const analysisMarkdown = generateVisualAnalysisMarkdown(visionAnalysis);
+    // Generate comprehensive ANALYSIS.md using LLM (includes image for context)
+    const analysisMarkdown = await generateVisualAnalysisMarkdownLLM(visionAnalysis, base64Image);
 
     // Create visual data object (matching schema type)
     const visualData = {
@@ -135,6 +137,21 @@ export async function POST(request: NextRequest) {
         ? `${visionAnalysis.componentType} (${imageCount} images)`
         : `${visionAnalysis.componentType} Screenshot`;
 
+    // Generate a source ID for file paths
+    const newId = sourceId || randomUUID();
+    
+    // Write ANALYSIS.md to disk
+    const analysisDir = path.join(process.cwd(), "analysis-output", newId);
+    const analysisFilePath = path.join(analysisDir, "ANALYSIS.md");
+    
+    try {
+      await mkdir(analysisDir, { recursive: true });
+      await writeFile(analysisFilePath, analysisMarkdown, "utf-8");
+      console.log(`ANALYSIS.md written to: ${analysisFilePath}`);
+    } catch (writeError) {
+      console.error("Failed to write ANALYSIS.md:", writeError);
+    }
+
     // Create or update source record
     let source;
     
@@ -147,6 +164,7 @@ export async function POST(request: NextRequest) {
           visualData,
           visionAnalysis: formattedVisionAnalysis,
           analysisStatus: "analyzed",
+          analysisPath: analysisFilePath,
           analysisMarkdown,
         })
         .where(eq(sources.id, sourceId))
@@ -154,18 +172,18 @@ export async function POST(request: NextRequest) {
       source = updated;
     } else {
       // Create new source
-      const newId = randomUUID();
       const [created] = await db
         .insert(sources)
         .values({
           id: newId,
           name: sourceName,
-          type: "github_repo", // Using github_repo as fallback since visual isn't in enum
+          type: "ai_prototype", // Visual sources are AI prototypes
           inputType: inputType as "github" | "screenshot" | "live_url",
           originUrl: capturedUrl || null,
           visualData,
           visionAnalysis: formattedVisionAnalysis,
           analysisStatus: "analyzed",
+          analysisPath: analysisFilePath,
           analysisMarkdown,
         })
         .returning();
