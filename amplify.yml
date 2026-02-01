@@ -10,8 +10,12 @@ applications:
         build:
           commands:
             - bun run build
+        postBuild:
+          commands:
+            - cp -r .next/static .next/standalone/apps/web/.next/static
+            - cp -r public .next/standalone/apps/web/public 2>/dev/null || true
       artifacts:
-        baseDirectory: .next
+        baseDirectory: .next/standalone/apps/web
         files:
           - '**/*'
       cache:
