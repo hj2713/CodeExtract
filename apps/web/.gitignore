@@ -22,6 +22,9 @@
 .tanstack/
 .nitro/
 
+# Generated analysis files
+/analysis-output/
+
 # Deployment
 .vercel
 .netlify
