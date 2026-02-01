@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { TopNav } from "@/components/ds/top-nav";
 
 // Animation styles - defined as a constant to avoid hydration issues
 const animationStyles = `
@@ -747,27 +748,31 @@ function QueueVisualization({
 	const claimedJobs = jobs.filter((j) => j.status === "claimed");
 	const completedJobs = jobs.filter((j) => j.status === "completed");
 	const failedJobs = jobs.filter((j) => j.status === "failed");
+	
+	// Calculate progress percentage
+	const totalActive = pendingJobs.length + claimedJobs.length;
+	const progressPercent = claimedJobs.length > 0 ? Math.min(95, (claimedJobs.length / Math.max(totalActive, 1)) * 100 + 10) : 0;
 
 	return (
 		<div className="space-y-3">
-			{/* Modern Stats Bar */}
-			<div className="flex items-center gap-1 font-mono text-xs">
-				<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-800/80 border border-zinc-700/50">
-					<div className="size-2 rounded-full bg-zinc-400" />
-					<span className="text-zinc-400">{stats.pending}</span>
+			{/* Minimal Stats Row */}
+			<div className="flex items-center gap-3 font-mono text-sm">
+				<div className="flex items-center gap-1.5 text-zinc-500">
+					<span className="size-2 rounded-full bg-zinc-400" />
+					<span>{stats.pending} pending</span>
 				</div>
-				<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-					<div className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-					<span className="text-emerald-400">{stats.claimed}</span>
+				<div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+					<span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+					<span>{stats.claimed} active</span>
 				</div>
-				<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
-					<div className="size-2 rounded-full bg-blue-400" />
-					<span className="text-blue-400">{stats.completed}</span>
+				<div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
+					<span className="size-2 rounded-full bg-blue-500" />
+					<span>{stats.completed} done</span>
 				</div>
 				{stats.failed > 0 && (
-					<div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20">
-						<div className="size-2 rounded-full bg-red-400" />
-						<span className="text-red-400">{stats.failed}</span>
+					<div className="flex items-center gap-1.5 text-red-600 dark:text-red-400">
+						<span className="size-2 rounded-full bg-red-500" />
+						<span>{stats.failed} failed</span>
 					</div>
 				)}
 				<div className="ml-auto">
@@ -775,143 +780,24 @@ function QueueVisualization({
 				</div>
 			</div>
 
-			{/* Queue Pipeline */}
-			<div className="relative">
-				{/* Pipeline Track */}
-				<div className="h-14 rounded-xl bg-gradient-to-r from-zinc-900 via-zinc-800/50 to-zinc-900 border border-zinc-700/30 backdrop-blur-sm overflow-hidden">
-					{/* Animated flow lines */}
-					<div className="absolute inset-0 overflow-hidden">
+			{/* Simple Progress Bar */}
+			{(claimedJobs.length > 0 || pendingJobs.length > 0) && (
+				<div className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+					{claimedJobs.length > 0 && (
 						<div 
-							className="absolute inset-y-0 w-[200%] opacity-[0.03]"
-							style={{
-								backgroundImage: `repeating-linear-gradient(90deg, transparent 0px, transparent 40px, currentColor 40px, currentColor 41px)`,
-								animation: 'flowRight 20s linear infinite',
-							}}
+							className="h-full bg-emerald-500 transition-all duration-500 ease-out"
+							style={{ width: `${progressPercent}%` }}
 						/>
-					</div>
-					
-					{/* Center line */}
-					<div className="absolute top-1/2 left-4 right-4 h-px bg-gradient-to-r from-zinc-700 via-zinc-600 to-zinc-700 -translate-y-1/2" />
-					
-					{/* Jobs */}
-					<div className="relative h-full flex items-center px-4 gap-3">
-						{claimedJobs.length === 0 && pendingJobs.length === 0 ? (
-							<div className="flex-1 flex items-center justify-center gap-2 text-zinc-500">
-								<span className="font-mono text-sm">Ready for jobs</span>
-								<span className="text-zinc-600">•</span>
-								<span className="font-mono text-xs text-zinc-600">click pew to queue</span>
-							</div>
-						) : (
-							<>
-								{/* Processing indicator */}
-								{claimedJobs.length > 0 && (
-									<div className="flex items-center gap-2">
-										<div className="relative">
-											{/* Glow effect */}
-											<div className="absolute -inset-1 bg-emerald-500/20 rounded-lg blur-sm animate-pulse" />
-											
-											{/* Processing job card */}
-											<div className="relative flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 backdrop-blur-sm">
-												<div className="relative size-6">
-													{/* Spinner */}
-													<svg className="size-6 animate-spin text-emerald-400" viewBox="0 0 24 24">
-														<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" />
-														<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-													</svg>
-												</div>
-												<div className="flex flex-col">
-													<span className="font-mono text-xs text-emerald-300 font-medium">Processing</span>
-													<span className="font-mono text-[10px] text-emerald-400/60">{claimedJobs.length} active</span>
-												</div>
-											</div>
-										</div>
-										
-										{/* Flow arrow */}
-										{pendingJobs.length > 0 && (
-											<svg className="size-4 text-zinc-600" fill="none" viewBox="0 0 24 24">
-												<path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M8 12h8m0 0l-3-3m3 3l-3 3" />
-											</svg>
-										)}
-									</div>
-								)}
-								
-								{/* Pending jobs queue */}
-								{pendingJobs.length > 0 && (
-									<div className="flex items-center gap-1.5">
-										{pendingJobs.slice(0, 8).map((job, index) => {
-											const attempts = job.attempts ?? 0;
-											return (
-												<div
-													key={job.id}
-													className={`
-														group relative size-8 rounded-md transition-all duration-300 cursor-default
-														${animatingIds.has(job.id) ? "scale-110 ring-2 ring-yellow-400/50" : "hover:scale-105"}
-													`}
-													style={{ 
-														opacity: 1 - (index * 0.08),
-													}}
-													title={`${job.id.slice(0, 8)} • ${attempts > 0 ? `${attempts} retries` : 'queued'}`}
-												>
-													{/* Card */}
-													<div className="absolute inset-0 rounded-md bg-gradient-to-br from-zinc-600 to-zinc-700 border border-zinc-500/30 shadow-lg shadow-black/20" />
-													
-													{/* Shine effect on hover */}
-													<div className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-white/10 to-transparent" />
-													
-													{/* Queue position */}
-													<div className="absolute inset-0 flex items-center justify-center">
-														<span className="font-mono text-[10px] font-bold text-zinc-300">{index + 1}</span>
-													</div>
-													
-													{/* Retry indicator */}
-													{attempts > 0 && (
-														<div className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-amber-500 border border-zinc-800" />
-													)}
-												</div>
-											);
-										})}
-										
-										{/* Overflow indicator */}
-										{pendingJobs.length > 8 && (
-											<div className="flex items-center justify-center px-2 py-1 rounded-md bg-zinc-800/80 border border-zinc-700/50">
-												<span className="font-mono text-[10px] text-zinc-400">+{pendingJobs.length - 8}</span>
-											</div>
-										)}
-									</div>
-								)}
-							</>
-						)}
-					</div>
+					)}
 				</div>
-				
-				{/* Mini completion trail */}
-				{(completedJobs.length > 0 || failedJobs.length > 0) && (
-					<div className="absolute -bottom-2 left-4 flex items-center gap-1">
-						{completedJobs.slice(0, 5).map((job) => (
-							<div 
-								key={job.id} 
-								className="size-1.5 rounded-full bg-blue-400/50" 
-								title={`Completed: ${job.id.slice(0, 8)}`}
-							/>
-						))}
-						{failedJobs.slice(0, 3).map((job) => (
-							<div 
-								key={job.id} 
-								className="size-1.5 rounded-full bg-red-400/50" 
-								title={`Failed: ${job.id.slice(0, 8)}`}
-							/>
-						))}
-					</div>
-				)}
-			</div>
-			
-			{/* Add flow animation keyframes */}
-			<style dangerouslySetInnerHTML={{ __html: `
-				@keyframes flowRight {
-					from { transform: translateX(-50%); }
-					to { transform: translateX(0%); }
-				}
-			`}} />
+			)}
+
+			{/* Empty State */}
+			{claimedJobs.length === 0 && pendingJobs.length === 0 && (
+				<div className="py-4 text-center">
+					<p className="font-mono text-sm text-zinc-500">Queue is empty</p>
+				</div>
+			)}
 		</div>
 	);
 }
@@ -985,35 +871,50 @@ export default function Page() {
 	const backUrl = firstSourceId ? `/himanshu?source=${firstSourceId}` : "/himanshu";
 
 	return (
-		<div className="p-8 max-w-6xl mx-auto space-y-8">
-			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="font-mono text-xl font-bold mb-1">Extraction Queue</h1>
-					<p className="font-mono text-sm text-muted-foreground flex items-center gap-2">
-						Phase 4: Code Extraction Pipeline
-						{isAutoProcessing && (
-							<span className="flex items-center gap-1.5 text-yellow-400">
-								<LoadingSpinner className="size-3" />
-								<span className="text-xs">Auto-processing...</span>
-							</span>
-						)}
-						{(stats?.pending ?? 0) > 0 && !isAutoProcessing && (
-							<span className="text-xs text-green-400">
-								({stats?.pending} pending)
-							</span>
-						)}
-					</p>
+		<>
+			<TopNav showCTA={false} />
+			<div className="p-8 max-w-6xl mx-auto space-y-8">
+				<div className="flex items-center justify-between">
+					<div>
+						<h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--n-800)' }}>Extraction Queue</h1>
+						<p className="text-sm flex items-center gap-2" style={{ color: 'var(--n-500)' }}>
+							Phase 4: Code Extraction Pipeline
+							{isAutoProcessing && (
+								<span className="flex items-center gap-1.5" style={{ color: 'var(--brand-600)' }}>
+									<LoadingSpinner className="size-3" />
+									<span className="text-xs">Auto-processing...</span>
+								</span>
+							)}
+							{(stats?.pending ?? 0) > 0 && !isAutoProcessing && (
+								<span className="text-xs" style={{ color: 'var(--brand-600)' }}>
+									({stats?.pending} pending)
+								</span>
+							)}
+						</p>
+					</div>
+					<a 
+						href={backUrl}
+						className="text-sm transition-colors flex items-center gap-2 px-4 py-2 rounded-lg border"
+						style={{ 
+							color: 'var(--n-600)',
+							borderColor: 'var(--n-200)',
+							backgroundColor: 'white'
+						}}
+						onMouseEnter={(e) => {
+							e.currentTarget.style.borderColor = 'var(--n-300)';
+							e.currentTarget.style.color = 'var(--n-800)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.borderColor = 'var(--n-200)';
+							e.currentTarget.style.color = 'var(--n-600)';
+						}}
+					>
+						<svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+						</svg>
+						Back to Interview
+					</a>
 				</div>
-				<a 
-					href={backUrl}
-					className="font-mono text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 border border-foreground/10 px-3 py-2 hover:border-foreground/30"
-				>
-					<svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-					</svg>
-					Back to Interview
-				</a>
-			</div>
 
 			{/* Queue Visualization */}
 			{stats && jobs && <QueueVisualization jobs={jobs} stats={stats} onRefresh={handlePew} />}
@@ -1062,9 +963,9 @@ export default function Page() {
 										key={req.id}
 										className="border border-foreground/10 p-3 hover:border-foreground/30 transition-colors"
 									>
-										<div className="flex items-start justify-between gap-2">
+										<div className="flex items-start gap-3">
 											<div className="min-w-0 flex-1">
-												<p className="font-mono text-xs truncate">
+												<p className="font-mono text-xs line-clamp-2 mb-1">
 													{req.requirement}
 												</p>
 												{req.originUrl && (
@@ -1078,7 +979,9 @@ export default function Page() {
 													</a>
 												)}
 											</div>
-											<PewButton requirement={req} onPew={handlePew} />
+											<div className="flex-shrink-0">
+												<PewButton requirement={req} onPew={handlePew} />
+											</div>
 										</div>
 									</div>
 								))}
@@ -1132,5 +1035,6 @@ export default function Page() {
 			{/* Animation keyframes */}
 			<style dangerouslySetInnerHTML={{ __html: animationStyles }} />
 		</div>
+		</>
 	);
 }

@@ -15,9 +15,11 @@ import {
   Globe,
   Upload,
   Image as ImageIcon,
-  X
+  X,
+  LayoutGrid
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TopNav } from "@/components/ds";
 import { 
   getOrCreateSource, 
   getSource, 
@@ -77,7 +79,7 @@ export default function ExtractPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-[var(--brand-600)] animate-spin" />
       </div>
     }>
       <ExtractPageContent />
@@ -323,6 +325,11 @@ function ExtractPageContent() {
     try {
       // Get or create source
       const sourceData = await getOrCreateSource(githubUrl.trim());
+      
+      if (!sourceData || !sourceData.id) {
+        throw new Error("Failed to create source - no data returned");
+      }
+      
       console.log("getOrCreateSource returned:", sourceData);
       setSource(sourceData as unknown as SourceData);
       setIsConnecting(false);
@@ -350,8 +357,14 @@ function ExtractPageContent() {
         setStage("interview");
       }
     } catch (err) {
-      console.error("Error in handleSubmit:", err);
-      setError("Failed to process repository. Please try again.");
+      console.error("Error in handleGitHubSubmit:", err);
+      
+      // More specific error message
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : "Failed to process repository. Please check your connection and try again.";
+      
+      setError(errorMessage);
       setIsSubmitting(false);
       setIsConnecting(false);
       setStage("input");  // Go back to input on error
@@ -628,67 +641,94 @@ function ExtractPageContent() {
   // Render based on stage
   if (stage === "input") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="relative w-full max-w-2xl">
-          {/* Logo/Title */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center p-4 rounded-2xl bg-emerald-100 mb-6">
-              <Sparkles className="w-10 h-10 text-emerald-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-3">
-              Code<span className="text-emerald-600">Extract</span>
-            </h1>
-            <p className="text-gray-500 text-lg">
-              Extract code patterns from any source
-            </p>
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--n-25)' }}>
+        <TopNav showCTA={false} />
+        
+        {/* Hero Section */}
+        <div className="max-content pt-16 pb-12 text-center">
+          <div className="inline-flex items-center justify-center p-4 rounded-2xl mb-6" style={{ backgroundColor: 'var(--brand-50)' }}>
+            <Code2 className="w-10 h-10" style={{ color: 'var(--brand-600)' }} />
           </div>
-
-          {/* Input Mode Tabs */}
-          <div className="flex justify-center mb-6">
-            <div className="inline-flex bg-gray-100 p-1 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setInputMode("github")}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  inputMode === "github"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <GitBranch className="w-4 h-4" />
-                GitHub
-              </button>
-              <button
-                type="button"
-                onClick={() => setInputMode("screenshot")}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  inputMode === "screenshot"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <Camera className="w-4 h-4" />
-                Screenshot
-              </button>
-              <button
-                type="button"
-                onClick={() => setInputMode("live_url")}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  inputMode === "live_url"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <Globe className="w-4 h-4" />
-                Live URL
-              </button>
-            </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: 'var(--n-800)', letterSpacing: '-0.02em' }}>
+            Extract reusable components<br />from any source
+          </h1>
+          <p className="text-lg mb-6 max-w-xl mx-auto" style={{ color: 'var(--n-500)' }}>
+            Analyze GitHub repos, screenshots, or live URLs. Get production-ready components in minutes.
+          </p>
+          
+          {/* Trust row */}
+          <div className="flex items-center justify-center gap-4 text-sm" style={{ color: 'var(--n-400)' }}>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--brand-600)' }} />
+              Next.js
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--brand-600)' }} />
+              React
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--brand-600)' }} />
+              TypeScript
+            </span>
           </div>
+        </div>
 
-          {/* Input Card */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg">
-            <form onSubmit={handleSubmit}>
-              {/* GitHub Input */}
+        {/* Input Card */}
+        <div className="max-content pb-16">
+          <div className="max-w-2xl mx-auto">
+            {/* Source Selector Tabs */}
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex p-1 rounded-xl" style={{ backgroundColor: 'var(--n-100)' }}>
+                <button
+                  type="button"
+                  onClick={() => setInputMode("github")}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    backgroundColor: inputMode === "github" ? 'var(--n-0)' : 'transparent',
+                    color: inputMode === "github" ? 'var(--n-800)' : 'var(--n-500)',
+                    boxShadow: inputMode === "github" ? 'var(--shadow-card)' : 'none',
+                  }}
+                >
+                  <GitBranch className="w-4 h-4" />
+                  GitHub
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInputMode("screenshot")}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    backgroundColor: inputMode === "screenshot" ? 'var(--n-0)' : 'transparent',
+                    color: inputMode === "screenshot" ? 'var(--n-800)' : 'var(--n-500)',
+                    boxShadow: inputMode === "screenshot" ? 'var(--shadow-card)' : 'none',
+                  }}
+                >
+                  <Camera className="w-4 h-4" />
+                  Screenshot
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInputMode("live_url")}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    backgroundColor: inputMode === "live_url" ? 'var(--n-0)' : 'transparent',
+                    color: inputMode === "live_url" ? 'var(--n-800)' : 'var(--n-500)',
+                    boxShadow: inputMode === "live_url" ? 'var(--shadow-card)' : 'none',
+                  }}
+                >
+                  <Globe className="w-4 h-4" />
+                  Live URL
+                </button>
+              </div>
+            </div>
+
+            {/* Form Card */}
+            <div className="rounded-2xl p-8" style={{ 
+              backgroundColor: 'var(--n-0)', 
+              border: '1px solid var(--n-200)',
+              boxShadow: 'var(--shadow-card)'
+            }}>
+              <form onSubmit={handleSubmit}>
+                {/* GitHub Input */}
               {inputMode === "github" && (
                 <>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -702,14 +742,14 @@ function ExtractPageContent() {
                         value={githubUrl}
                         onChange={(e) => setGithubUrl(e.target.value)}
                         placeholder="https://github.com/owner/repository"
-                        className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                        className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:border-[var(--brand-500)] transition-all duration-200"
                       />
                     </div>
                     <Button
                       type="submit"
                       size="lg"
                       disabled={isSubmitting}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg px-8"
+                      className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white shadow-lg px-8"
                     >
                       {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
                     </Button>
@@ -724,7 +764,7 @@ function ExtractPageContent() {
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     Upload Screenshots
                     {screenshotPreviews.length > 0 && (
-                      <span className="ml-2 text-emerald-600">({screenshotPreviews.length} image{screenshotPreviews.length > 1 ? 's' : ''})</span>
+                      <span className="ml-2 text-[var(--brand-600)]">({screenshotPreviews.length} image{screenshotPreviews.length > 1 ? 's' : ''})</span>
                     )}
                   </label>
                   
@@ -736,8 +776,8 @@ function ExtractPageContent() {
                     onClick={() => fileInputRef.current?.click()}
                     className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
                       isDragOver
-                        ? "border-emerald-500 bg-emerald-50"
-                        : "border-gray-300 hover:border-emerald-400 hover:bg-gray-50"
+                        ? "border-[var(--brand-500)] bg-[var(--brand-50)]"
+                        : "border-gray-300 hover:border-[var(--brand-600)] hover:bg-gray-50"
                     }`}
                   >
                     <input
@@ -782,7 +822,7 @@ function ExtractPageContent() {
                               <X className="w-3 h-3 text-gray-600" />
                             </button>
                             {index === 0 && (
-                              <span className="absolute bottom-1 left-1 text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded">
+                              <span className="absolute bottom-1 left-1 text-[10px] bg-[var(--brand-600)] text-white px-1.5 py-0.5 rounded">
                                 Primary
                               </span>
                             )}
@@ -797,7 +837,7 @@ function ExtractPageContent() {
                       type="submit"
                       size="lg"
                       disabled={isSubmitting || screenshotPreviews.length === 0}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg px-8"
+                      className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white shadow-lg px-8"
                     >
                       {isSubmitting ? (
                         <>
@@ -828,7 +868,7 @@ function ExtractPageContent() {
                       value={liveUrl}
                       onChange={(e) => setLiveUrl(e.target.value)}
                       placeholder="https://example.com"
-                      className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                      className="w-full pl-12 pr-4 py-4 rounded-xl border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:border-[var(--brand-500)] transition-all duration-200"
                     />
                   </div>
                   
@@ -846,8 +886,8 @@ function ExtractPageContent() {
                     onClick={() => fileInputRef.current?.click()}
                     className={`relative border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
                       isDragOver
-                        ? "border-emerald-500 bg-emerald-50"
-                        : "border-gray-200 hover:border-emerald-400 hover:bg-gray-50"
+                        ? "border-[var(--brand-500)] bg-[var(--brand-50)]"
+                        : "border-gray-200 hover:border-[var(--brand-600)] hover:bg-gray-50"
                     }`}
                   >
                     <input
@@ -891,7 +931,7 @@ function ExtractPageContent() {
                               className="w-full aspect-video rounded-lg border border-gray-200 object-cover bg-gray-50"
                             />
                             {index === 0 && (
-                              <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-emerald-500 text-white text-xs rounded">
+                              <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-[var(--brand-500)] text-white text-xs rounded">
                                 Primary
                               </span>
                             )}
@@ -916,7 +956,7 @@ function ExtractPageContent() {
                       type="submit"
                       size="lg"
                       disabled={isSubmitting || !liveUrl}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg px-8"
+                      className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white shadow-lg px-8"
                     >
                       {isSubmitting ? (
                         <>
@@ -942,28 +982,32 @@ function ExtractPageContent() {
             </form>
 
             {/* Features */}
-            <div className="mt-8 pt-8 border-t border-gray-200">
+            <div className="mt-8 pt-8" style={{ borderTop: '1px solid var(--n-100)' }}>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center mx-auto mb-2">
-                    <Code2 className="w-5 h-5 text-emerald-600" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2" style={{ backgroundColor: 'var(--brand-50)' }}>
+                    <Code2 className="w-5 h-5" style={{ color: 'var(--brand-600)' }} />
                   </div>
-                  <p className="text-xs text-gray-500">AI-Powered Analysis</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--n-700)' }}>Analyze</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--n-400)' }}>AI-powered code analysis</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mx-auto mb-2">
-                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2" style={{ backgroundColor: 'var(--info-50)' }}>
+                    <MessageSquare className="w-5 h-5" style={{ color: 'var(--info-600)' }} />
                   </div>
-                  <p className="text-xs text-gray-500">Interactive Interview</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--n-700)' }}>Interview</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--n-400)' }}>Define requirements</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mx-auto mb-2">
-                    <Zap className="w-5 h-5 text-amber-600" />
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2" style={{ backgroundColor: 'var(--warn-50)' }}>
+                    <Zap className="w-5 h-5" style={{ color: 'var(--warn-600)' }} />
                   </div>
-                  <p className="text-xs text-gray-500">Instant Extraction</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--n-700)' }}>Extract</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--n-400)' }}>Get clean components</p>
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -979,9 +1023,9 @@ function ExtractPageContent() {
             {/* Main loader */}
             <div className="relative mb-8">
               <div className="w-24 h-24 mx-auto relative">
-                <div className={`absolute inset-0 rounded-full blur-xl opacity-50 animate-pulse ${isVisualAnalyzing ? 'bg-purple-200' : 'bg-emerald-200'}`}></div>
-                <div className={`relative w-full h-full rounded-full border flex items-center justify-center ${isVisualAnalyzing ? 'bg-purple-100 border-purple-200' : 'bg-emerald-100 border-emerald-200'}`}>
-                  <Loader2 className={`w-10 h-10 animate-spin ${isVisualAnalyzing ? 'text-purple-600' : 'text-emerald-600'}`} />
+                <div className={`absolute inset-0 rounded-full blur-xl opacity-50 animate-pulse ${isVisualAnalyzing ? 'bg-purple-200' : 'bg-[var(--brand-200)]'}`}></div>
+                <div className={`relative w-full h-full rounded-full border flex items-center justify-center ${isVisualAnalyzing ? 'bg-purple-100 border-purple-200' : 'bg-[var(--brand-100)] border-[var(--brand-200)]'}`}>
+                  <Loader2 className={`w-10 h-10 animate-spin ${isVisualAnalyzing ? 'text-purple-600' : 'text-[var(--brand-600)]'}`} />
                 </div>
               </div>
             </div>
@@ -996,9 +1040,9 @@ function ExtractPageContent() {
                 : (source?.name || githubUrl.split("/").slice(-2).join("/"))}
             </p>
             {statusMessage && (
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 ${isVisualAnalyzing ? 'bg-purple-50 border border-purple-200' : 'bg-emerald-50 border border-emerald-200'}`}>
-                <div className={`w-2 h-2 rounded-full animate-pulse ${isVisualAnalyzing ? 'bg-purple-500' : 'bg-emerald-500'}`} />
-                <p className={`text-sm font-medium ${isVisualAnalyzing ? 'text-purple-700' : 'text-emerald-700'}`}>{statusMessage}</p>
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 ${isVisualAnalyzing ? 'bg-purple-50 border border-purple-200' : 'bg-[var(--brand-50)] border border-[var(--brand-200)]'}`}>
+                <div className={`w-2 h-2 rounded-full animate-pulse ${isVisualAnalyzing ? 'bg-purple-500' : 'bg-[var(--brand-500)]'}`} />
+                <p className={`text-sm font-medium ${isVisualAnalyzing ? 'text-purple-700' : 'text-[var(--brand-700)]'}`}>{statusMessage}</p>
               </div>
             )}
             {!statusMessage && <div className="mb-8" />}
@@ -1010,7 +1054,7 @@ function ExtractPageContent() {
                   const Icon = step.icon;
                   const isActive = index === analysisStep;
                   const isComplete = index < analysisStep;
-                  const activeColor = isVisualAnalyzing ? 'purple' : 'emerald';
+                  const activeColor = isVisualAnalyzing ? 'purple' : 'brand';
                   
                   return (
                     <div
@@ -1022,19 +1066,19 @@ function ExtractPageContent() {
                       style={isActive ? { backgroundColor: isVisualAnalyzing ? 'rgb(250, 245, 255)' : 'rgb(236, 253, 245)', borderColor: isVisualAnalyzing ? 'rgb(221, 214, 254)' : 'rgb(167, 243, 208)' } : {}}
                     >
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        isComplete ? "bg-emerald-100" :
-                        isActive ? "bg-emerald-100" : "bg-gray-100"
+                        isComplete ? "bg-[var(--brand-100)]" :
+                        isActive ? "bg-[var(--brand-100)]" : "bg-gray-100"
                       }`}>
                         {isComplete ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                          <CheckCircle2 className="w-5 h-5 text-[var(--brand-600)]" />
                         ) : isActive ? (
-                          <Loader2 className="w-5 h-5 text-emerald-600 animate-spin" />
+                          <Loader2 className="w-5 h-5 text-[var(--brand-600)] animate-spin" />
                         ) : (
                           <Icon className="w-5 h-5 text-gray-400" />
                         )}
                       </div>
                       <span className={`text-sm ${
-                        isComplete ? "text-emerald-700" :
+                        isComplete ? "text-[var(--brand-700)]" :
                         isActive ? "text-gray-900 font-medium" : "text-gray-400"
                       }`}>
                         {step.label}
@@ -1097,14 +1141,14 @@ function ExtractPageContent() {
                           idx === analyzingImageIndex 
                             ? 'border-purple-500 ring-2 ring-purple-200' 
                             : idx < analyzingImageIndex 
-                              ? 'border-emerald-400 opacity-70'
+                              ? 'border-[var(--brand-600)] opacity-70'
                               : 'border-gray-200 opacity-50'
                         }`}
                       >
                         <img src={preview} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
                         {idx < analyzingImageIndex && (
-                          <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <div className="absolute inset-0 bg-[var(--brand-500)]/20 flex items-center justify-center">
+                            <CheckCircle2 className="w-4 h-4 text-[var(--brand-600)]" />
                           </div>
                         )}
                       </div>
@@ -1132,7 +1176,9 @@ function ExtractPageContent() {
 
   // Interview stage
   return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+      <TopNav showCTA={false} />
+      <div className="flex-1 flex overflow-hidden">
       {/* Sidebar */}
       <RequirementsSidebar
         source={source}
@@ -1155,6 +1201,7 @@ function ExtractPageContent() {
           initialInput={mentionedComponent}
           onInputConsumed={() => setMentionedComponent(null)}
         />
+      </div>
       </div>
     </div>
   );

@@ -161,7 +161,7 @@ export function RequirementsSidebar({
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-emerald-600 shadow-lg">
+              <div className="p-2 rounded-xl bg-[var(--brand-600)] shadow-lg">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <h2 className="font-semibold text-lg text-gray-900">Context</h2>
@@ -171,7 +171,7 @@ export function RequirementsSidebar({
               size="sm" 
               className={cn(
                 "h-8 w-8 p-0 rounded-lg transition-colors",
-                showTechStack ? "bg-emerald-100 text-emerald-600" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                showTechStack ? "bg-[var(--brand-100)] text-[var(--brand-600)]" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               )}
               onClick={() => setShowTechStack(!showTechStack)}
             >
@@ -184,7 +184,7 @@ export function RequirementsSidebar({
               href={source.originUrl} 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="text-sm text-gray-500 truncate hover:text-emerald-600 flex items-center gap-1 transition-colors"
+              className="text-sm text-gray-500 truncate hover:text-[var(--brand-600)] flex items-center gap-1 transition-colors"
             >
               {source.name}
               <ExternalLink className="w-3 h-3" />
@@ -192,7 +192,7 @@ export function RequirementsSidebar({
           ) : (
             <div className="flex items-center gap-2">
               {isVisualSource && (
-                <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-[10px]">
+                <Badge className="bg-[var(--brand-100)] text-[var(--brand-700)] border-[var(--brand-200)] text-[10px]">
                   {source?.inputType === "screenshot" ? (
                     <><Camera className="w-3 h-3 mr-1" /> Screenshot</>
                   ) : (
@@ -212,7 +212,7 @@ export function RequirementsSidebar({
                   <h3 className="text-[10px] font-semibold uppercase text-gray-500 mb-2 tracking-wider">Tech Stack</h3>
                   <div className="flex flex-wrap gap-1.5">
                     {techStack.map((tech) => (
-                      <Badge key={tech} className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] px-2 py-0.5">
+                      <Badge key={tech} className="bg-[var(--brand-100)] text-[var(--brand-700)] border-[var(--brand-200)] text-[10px] px-2 py-0.5">
                         {tech}
                       </Badge>
                     ))}
@@ -247,13 +247,13 @@ export function RequirementsSidebar({
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-semibold uppercase text-gray-500 flex items-center gap-2 tracking-wider">
                   {isVisualSource ? (
-                    <ImageIcon size={12} className="text-purple-600" />
+                    <ImageIcon size={12} className="text-[var(--brand-600)]" />
                   ) : (
-                    <Package size={12} className="text-emerald-600" />
+                    <Package size={12} className="text-[var(--brand-600)]" />
                   )}
                   {isVisualSource ? "Reference Image" : "Components"}
                   {!isVisualSource && components.length > 0 && (
-                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px] ml-1">
+                    <Badge className="bg-[var(--brand-100)] text-[var(--brand-700)] border-[var(--brand-200)] text-[10px] ml-1">
                       {components.length}
                     </Badge>
                   )}
@@ -277,7 +277,7 @@ export function RequirementsSidebar({
                             className={cn(
                               "w-2 h-2 rounded-full transition-colors",
                               idx === currentImageIndex 
-                                ? "bg-purple-500" 
+                                ? "bg-[var(--brand-500)]" 
                                 : "bg-gray-300 hover:bg-gray-400"
                             )}
                           />
@@ -290,7 +290,7 @@ export function RequirementsSidebar({
                   <div className="relative">
                     <button
                       onClick={() => setShowImageModal(true)}
-                      className="group relative w-full rounded-xl overflow-hidden border-2 border-gray-200 hover:border-purple-400 transition-all"
+                      className="group relative w-full rounded-xl overflow-hidden border-2 border-gray-200 hover:border-[var(--brand-400)] transition-all"
                     >
                       <img
                         src={allScreenshots[currentImageIndex]}
@@ -303,7 +303,7 @@ export function RequirementsSidebar({
                         </div>
                       </div>
                       {currentImageIndex === 0 && hasMultipleImages && (
-                        <span className="absolute top-2 left-2 px-1.5 py-0.5 bg-purple-500 text-white text-[10px] rounded">
+                        <span className="absolute top-2 left-2 px-1.5 py-0.5 bg-[var(--brand-500)] text-white text-[10px] rounded">
                           Primary
                         </span>
                       )}
@@ -338,7 +338,7 @@ export function RequirementsSidebar({
                           className={cn(
                             "flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all",
                             idx === currentImageIndex 
-                              ? "border-purple-500 ring-1 ring-purple-300" 
+                              ? "border-[var(--brand-500)] ring-1 ring-[var(--brand-300)]" 
                               : "border-gray-200 hover:border-gray-400"
                           )}
                         >
@@ -353,10 +353,10 @@ export function RequirementsSidebar({
                   )}
                   
                   {source?.visionAnalysis?.componentType && (
-                    <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
-                      <p className="text-xs font-medium text-purple-700">{source.visionAnalysis.componentType}</p>
+                    <div className="mt-2 p-2 bg-[var(--brand-50)] border border-[var(--brand-200)] rounded-lg">
+                      <p className="text-xs font-medium text-[var(--brand-700)]">{source.visionAnalysis.componentType}</p>
                       {source.visionAnalysis.description && (
-                        <p className="text-[10px] text-purple-600 mt-1 line-clamp-2">{source.visionAnalysis.description}</p>
+                        <p className="text-[10px] text-[var(--brand-600)] mt-1 line-clamp-2">{source.visionAnalysis.description}</p>
                       )}
                     </div>
                   )}
@@ -373,7 +373,7 @@ export function RequirementsSidebar({
                         placeholder="Search components..." 
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="h-9 pl-9 text-xs bg-white border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-emerald-500 focus:ring-emerald-500/20"
+                        className="h-9 pl-9 text-xs bg-white border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:border-[var(--brand-500)] focus:ring-[var(--brand-500)]/20"
                       />
                     </div>
                   )}
@@ -395,11 +395,11 @@ export function RequirementsSidebar({
                         <button
                           key={comp.name}
                           onClick={() => handleComponentClick(comp)}
-                          className="group px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-900 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-all truncate max-w-full text-left"
+                          className="group px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-900 hover:bg-[var(--brand-50)] hover:border-[var(--brand-300)] hover:text-[var(--brand-700)] transition-all truncate max-w-full text-left"
                           title={comp.description || comp.filePath}
                         >
                           <span className="flex items-center gap-1.5">
-                            <FileCode className="w-3 h-3 text-gray-400 group-hover:text-emerald-600 transition-colors" />
+                            <FileCode className="w-3 h-3 text-gray-400 group-hover:text-[var(--brand-600)] transition-colors" />
                             {comp.name}
                           </span>
                         </button>
@@ -412,8 +412,8 @@ export function RequirementsSidebar({
               {/* No screenshot uploaded message */}
               {isVisualSource && allScreenshots.length === 0 && (
                 <div className="text-center py-4 w-full">
-                  <div className="p-3 rounded-2xl bg-purple-50 border border-purple-200 w-fit mx-auto mb-2">
-                    <Camera className="w-4 h-4 text-purple-400" />
+                  <div className="p-3 rounded-2xl bg-[var(--brand-50)] border border-[var(--brand-200)] w-fit mx-auto mb-2">
+                    <Camera className="w-4 h-4 text-[var(--brand-400)]" />
                   </div>
                   <p className="text-xs text-gray-500">No screenshot uploaded</p>
                 </div>
@@ -442,10 +442,10 @@ export function RequirementsSidebar({
                     <button
                       key={req.id}
                       onClick={() => handleRequirementClick(req)}
-                      className="w-full text-left bg-gray-50 rounded-xl border border-gray-200 overflow-hidden hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-200 p-3"
+                      className="w-full text-left bg-gray-50 rounded-xl border border-gray-200 overflow-hidden hover:border-[var(--brand-300)] hover:bg-[var(--brand-50)] transition-all duration-200 p-3"
                     >
                       <div className="flex items-start gap-2">
-                        <Zap className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <Zap className="w-4 h-4 text-[var(--brand-600)] mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-medium text-gray-900 truncate">
                             {req.title || "Untitled Requirement"}
@@ -467,37 +467,6 @@ export function RequirementsSidebar({
               )}
             </div>
 
-            {/* Extracting Requirements */}
-            {extractingRequirements.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs font-semibold uppercase text-gray-500 tracking-wider">
-                    Extracting
-                  </h3>
-                  <span className="text-xs text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full animate-pulse">
-                    {extractingRequirements.length} active
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  {extractingRequirements.map((req) => (
-                    <button
-                      key={req.id}
-                      onClick={() => handleRequirementClick(req)}
-                      className="w-full text-left bg-emerald-50 rounded-xl border border-emerald-200 p-3 hover:bg-emerald-100 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                        <h4 className="text-sm font-medium text-emerald-700 truncate flex-1">
-                          {req.title || "Extracting..."}
-                        </h4>
-                        <Eye className="w-3 h-3 text-emerald-600" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </ScrollArea>
 
@@ -505,7 +474,7 @@ export function RequirementsSidebar({
         {savedRequirements.length > 0 && (
           <div className="p-3 border-t border-gray-200 space-y-2">
             <Button
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg"
+              className="w-full bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white shadow-lg"
               onClick={() => {
                 window.location.href = "/partner/backwards/prototypes/fetch-model-and-req";
               }}
@@ -593,7 +562,7 @@ export function RequirementsSidebar({
                     className={cn(
                       "w-14 h-14 rounded-lg overflow-hidden border-2 transition-all",
                       idx === currentImageIndex 
-                        ? "border-white ring-2 ring-purple-400" 
+                        ? "border-white ring-2 ring-[var(--brand-400)]" 
                         : "border-transparent opacity-70 hover:opacity-100"
                     )}
                   >
