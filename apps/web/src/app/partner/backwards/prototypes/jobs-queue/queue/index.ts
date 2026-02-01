@@ -6,6 +6,7 @@ import type {
 	JobStats,
 	JobFilter,
 } from "./types";
+import { sendToSQS } from "@/lib/aws/sqs";
 
 // ============================================================================
 // Queue Interface
@@ -76,6 +77,21 @@ export async function enqueue(
 		.returning();
 
 	console.log("[enqueue] inserted job:", job);
+
+	// Also send to AWS SQS for cloud-based processing
+	try {
+		await sendToSQS({
+			jobId: job.id,
+			type: payload.type,
+			payload: payload as Record<string, unknown>,
+			priority,
+			createdAt: now,
+		});
+		console.log("[enqueue] sent to SQS:", job.id);
+	} catch (sqsError) {
+		// SQS is optional - log but don't fail the enqueue
+		console.warn("[enqueue] SQS send failed (non-blocking):", sqsError);
+	}
 
 	return job;
 }

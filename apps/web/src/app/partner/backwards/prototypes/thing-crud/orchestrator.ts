@@ -31,7 +31,7 @@ function getProjectRoot(): string {
 }
 
 const PROJECT_ROOT = getProjectRoot();
-const CREATED_APPS_DIR = path.join(PROJECT_ROOT, "created-apps");
+const CREATED_APPS_DIR = path.join(PROJECT_ROOT, "_created-apps");
 const LOGS_DIR = path.join(PROJECT_ROOT, "logs");
 
 // Port range for code examples (different from pm2-app-mgmt)
@@ -259,7 +259,7 @@ export async function createCodeExample(
   const name = options.name || generateName();
   const port = await allocatePort();
   const directory = path.join(CREATED_APPS_DIR, id);
-  const relativePath = `./created-apps/${id}`;
+  const relativePath = `./_created-apps/${id}`;
   const pm2Name = `example-${id}`;
 
   // Scaffold the Next.js app
@@ -442,7 +442,7 @@ export async function deleteCodeExample(id: string): Promise<void> {
 
   // Clean up directory
   const absoluteDir = path.resolve(PROJECT_ROOT, example.path);
-  if (absoluteDir.includes("/created-apps/")) {
+  if (absoluteDir.includes("/_created-apps/")) {
     try {
       await fs.rm(absoluteDir, { recursive: true, force: true });
     } catch (error) {

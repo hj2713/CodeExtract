@@ -5,7 +5,7 @@ export const getPrototypeDir = () =>
 	path.resolve(process.cwd(), "src/app/partner/backwards/prototypes/with-prompt");
 
 export const getAppsDir = () =>
-	path.join(getPrototypeDir(), "created-apps");
+	path.join(getPrototypeDir(), "_created-apps");
 
 export const getAppsJsonPath = () =>
 	path.join(getPrototypeDir(), "apps.json");

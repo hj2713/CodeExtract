@@ -4,6 +4,7 @@ import { db, sources, eq } from "@my-better-t-app/db";
 import { randomUUID } from "crypto";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { uploadScreenshotsToS3 } from "@/lib/aws/s3";
 
 export const maxDuration = 60;
 
@@ -81,10 +82,26 @@ export async function POST(request: NextRequest) {
     // Generate comprehensive ANALYSIS.md using LLM (includes image for context)
     const analysisMarkdown = await generateVisualAnalysisMarkdownLLM(visionAnalysis, base64Image);
 
-    // Create visual data object (matching schema type)
+    // Generate a source ID for file paths (moved up for S3 upload)
+    const newId = sourceId || randomUUID();
+
+    // Upload screenshots to S3 instead of storing base64
+    const screenshotsToUpload = allScreenshots.length > 0 ? allScreenshots : [base64Image];
+    let screenshotUrls: string[] = [];
+
+    try {
+      screenshotUrls = await uploadScreenshotsToS3(screenshotsToUpload, newId);
+      console.log(`Uploaded ${screenshotUrls.length} screenshots to S3`);
+    } catch (s3Error) {
+      console.error("S3 upload failed, falling back to base64:", s3Error);
+      // Fallback: store base64 if S3 fails
+      screenshotUrls = screenshotsToUpload;
+    }
+
+    // Create visual data object with S3 URLs (or base64 fallback)
     const visualData = {
-      screenshotBase64: base64Image,
-      allScreenshots: allScreenshots.length > 0 ? allScreenshots : [base64Image],
+      screenshotUrl: screenshotUrls[0], // Primary screenshot URL
+      allScreenshotUrls: screenshotUrls, // All screenshot URLs
       capturedUrl: capturedUrl || undefined,
       capturedHtml: capturedHtml ? capturedHtml.substring(0, 10000) : undefined,
     };
@@ -137,9 +154,6 @@ export async function POST(request: NextRequest) {
         ? `${visionAnalysis.componentType} (${imageCount} images)`
         : `${visionAnalysis.componentType} Screenshot`;
 
-    // Generate a source ID for file paths
-    const newId = sourceId || randomUUID();
-    
     // Write ANALYSIS.md to disk
     const analysisDir = path.join(process.cwd(), "analysis-output", newId);
     const analysisFilePath = path.join(analysisDir, "ANALYSIS.md");

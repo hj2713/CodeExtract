@@ -39,7 +39,7 @@ function getProjectRoot(): string {
 
 const PROJECT_ROOT = getProjectRoot();
 const MANIFEST_PATH = path.join(PROJECT_ROOT, "manifest.json");
-const CREATED_APPS_DIR = path.join(PROJECT_ROOT, "created-apps");
+const CREATED_APPS_DIR = path.join(PROJECT_ROOT, "_created-apps");
 const LOGS_DIR = path.join(PROJECT_ROOT, "logs");
 
 // Ensure directories exist
@@ -288,8 +288,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<AppInfo
   const name = options.name || generateName();
   const category = options.category || null;
   const port = await allocatePort();
-  const directory = `./created-apps/${id}`;
-  const absoluteDir = path.join(PROJECT_ROOT, "created-apps", id);
+  const directory = `./_created-apps/${id}`;
+  const absoluteDir = path.join(PROJECT_ROOT, "_created-apps", id);
   const pm2Name = `orch-${id}`;
 
   // Scaffold the Next.js app
@@ -466,8 +466,8 @@ export async function deleteApp(
   // Clean up directory
   if (options.cleanup) {
     const absoluteDir = path.resolve(PROJECT_ROOT, app.directory);
-    // Safety check - only delete if it's in our created-apps directory
-    if (absoluteDir.includes("/created-apps/")) {
+    // Safety check - only delete if it's in our _created-apps directory
+    if (absoluteDir.includes("/_created-apps/")) {
       try {
         await fs.rm(absoluteDir, { recursive: true, force: true });
       } catch (error) {

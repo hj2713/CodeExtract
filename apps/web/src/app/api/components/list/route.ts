@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const createdAppsPath = path.join(
       process.cwd(),
-      'src/app/partner/backwards/prototypes/fetch-model-and-req/created-apps'
+      'src/app/partner/backwards/prototypes/fetch-model-and-req/_created-apps'
     );
 
     // Read all directories in created-apps

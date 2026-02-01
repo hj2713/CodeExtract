@@ -14,7 +14,7 @@ const WORKER_DIR = path.join(
 );
 
 function getAppsDir(): string {
-	return path.join(WORKER_DIR, "created-apps");
+	return path.join(WORKER_DIR, "_created-apps");
 }
 
 function getAppDir(name: string): string {

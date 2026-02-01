@@ -54,3 +54,10 @@ temp
 local.db
 apps/web/.sources/
 reference_phase1/
+
+# Generated/extracted apps (contain nested Next.js projects)
+apps/web/src/app/partner/backwards/prototypes/fetch-model-and-req/_created-apps/
+apps/web/analysis-output/
+apps/web/test/
+apps/web/test2/
+apps/web/extract-the-waitlist/

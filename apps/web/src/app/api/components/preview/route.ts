@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
       const componentPath = path.join(
         process.cwd(),
-        'src/app/partner/backwards/prototypes/fetch-model-and-req/created-apps',
+        'src/app/partner/backwards/prototypes/fetch-model-and-req/_created-apps',
         componentId
       );
 

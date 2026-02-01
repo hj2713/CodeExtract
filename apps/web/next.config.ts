@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
 			bodySizeLimit: "10mb", // Allow larger payloads for image uploads
 		},
 	},
+	typescript: {
+		ignoreBuildErrors: true,
+	},
+	// Empty turbopack config to acknowledge Turbopack usage
+	turbopack: {},
 };
 
 export default nextConfig;

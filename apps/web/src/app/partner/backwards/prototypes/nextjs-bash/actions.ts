@@ -12,7 +12,7 @@ const PROTOTYPE_DIR = path.join(
 	process.cwd(),
 	"src/app/partner/backwards/prototypes/nextjs-bash"
 );
-const APPS_DIR = path.join(PROTOTYPE_DIR, "created-apps");
+const APPS_DIR = path.join(PROTOTYPE_DIR, "_created-apps");
 const APPS_JSON = path.join(PROTOTYPE_DIR, "apps.json");
 
 export async function getApps(): Promise<CreatedApp[]> {

@@ -7,7 +7,7 @@ export const getPrototypeDir = () =>
 		"src/app/partner/backwards/prototypes/fetch-model-and-req"
 	);
 
-export const getAppsDir = () => path.join(getPrototypeDir(), "created-apps");
+export const getAppsDir = () => path.join(getPrototypeDir(), "_created-apps");
 
 export const getTemplateDir = () =>
 	path.resolve(process.cwd(), "src/app/templates/fullstack");
