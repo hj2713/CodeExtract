@@ -8,6 +8,7 @@ export type ClaudeExtractionPayload = {
 	type: "claude_extraction";
 	name: string;
 	prompt: string;
+	branch: string | null;
 	targetPath: string | null;
 	originUrl: string | null;
 	requirementId: string | null;

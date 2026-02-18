@@ -50,7 +50,7 @@ export default function CrudPromptGithubPage() {
 						originUrl: githubUrl,
 						description: description || "No description provided",
 					})
-				: Promise.resolve({ success: true }),
+				: Promise.resolve({ success: true as const, error: undefined, source: undefined }),
 		]);
 
 		if (!promptResult.success) {

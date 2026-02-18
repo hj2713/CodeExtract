@@ -18,5 +18,25 @@
       "forks": null,
       "fetchedAt": null
     }
+  },
+  {
+    "id": "78b3bf78-c1f3-4cec-ba0d-1d7c70649c04",
+    "type": "github_repo",
+    "path": null,
+    "originUrl": "https://github.com/hj2713/CodeExtract",
+    "description": "testing",
+    "analysisPath": null,
+    "analysisConfirmed": false,
+    "createdAt": "2026-02-01T13:00:31.151Z",
+    "updatedAt": "2026-02-01T13:00:31.151Z",
+    "github": {
+      "owner": "hj2713",
+      "repo": "CodeExtract",
+      "defaultBranch": null,
+      "description": null,
+      "stars": null,
+      "forks": null,
+      "fetchedAt": null
+    }
   }
 ]

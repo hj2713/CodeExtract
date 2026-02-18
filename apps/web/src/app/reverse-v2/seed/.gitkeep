@@ -1,0 +1,3 @@
+# Seed scripts for manually-built code examples
+# Each extraction gets its own folder: seed/{slug-name}/seed.ts
+# Run with: cd seed/{slug-name} && npx tsx seed.ts

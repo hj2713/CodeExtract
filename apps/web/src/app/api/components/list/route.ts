@@ -14,6 +14,8 @@ export interface ComponentMetadata {
   reviewStatus: ReviewStatus;
   prompt?: string;
   originUrl?: string;
+  /** True if component has its own package.json (standalone Next.js app) */
+  isStandaloneNextApp: boolean;
 }
 
 export async function GET(request: Request) {
@@ -61,6 +63,11 @@ export async function GET(request: Request) {
         path.join(componentPath, 'src/app/extracted/page.tsx')
       );
 
+      // Check if component has its own package.json (standalone Next.js app)
+      const isStandaloneNextApp = fs.existsSync(
+        path.join(componentPath, 'package.json')
+      );
+
       // Default reviewStatus to "pending" if not present
       const reviewStatus = (metadata.reviewStatus as ReviewStatus) || 'pending';
 
@@ -77,6 +84,7 @@ export async function GET(request: Request) {
         reviewStatus,
         prompt: metadata.prompt as string | undefined,
         originUrl: metadata.originUrl as string | undefined,
+        isStandaloneNextApp,
       };
     });
 

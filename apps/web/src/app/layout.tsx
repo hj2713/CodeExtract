@@ -4,6 +4,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 
 import "@/index.css";
 import { Providers } from "@/components/providers";
+import Script from "next/script";
 
 const inter = Inter({
 	variable: "--font-inter",
@@ -29,6 +30,16 @@ export default async function RootLayout({
 }>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
+			<head>
+				{/* {
+					<Script
+						src="//unpkg.com/react-grab/dist/index.global.js"
+						crossOrigin="anonymous"
+						strategy="beforeInteractive"
+					/>
+				}
+ */}
+			</head>
 			<body
 				className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
 				style={{ fontFamily: 'var(--font-inter), system-ui, sans-serif' }}

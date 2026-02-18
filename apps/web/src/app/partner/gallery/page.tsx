@@ -33,6 +33,8 @@ interface Component {
   reviewStatus: 'pending' | 'approved' | 'rejected';
   prompt?: string;
   originUrl?: string;
+  /** True if component has its own package.json (standalone Next.js app) */
+  isStandaloneNextApp: boolean;
 }
 
 type InstallStatus = 'idle' | 'installing' | 'success' | 'error';
@@ -92,16 +94,26 @@ export default function VerificationQueuePage() {
   }, [loadComponents]);
 
   // Start preview server when component changes
+  // Uses intelligent URL detection: standalone Next.js apps use preview API, simple page.tsx use main server
   useEffect(() => {
     if (!currentComponent) return;
 
     let mounted = true;
     let pollInterval: NodeJS.Timeout;
 
-    async function startPreviewServer() {
+    async function startPreview() {
       setPreviewStatus('starting');
       setPreviewError('');
 
+      // Intelligent URL detection: non-standalone apps use the main server directly
+      if (!currentComponent.isStandaloneNextApp) {
+        const directUrl = `http://localhost:3001/partner/backwards/prototypes/fetch-model-and-req/created-apps/${currentComponent.id}`;
+        setPreviewUrl(directUrl);
+        setPreviewStatus('ready');
+        return;
+      }
+
+      // Standalone apps: start preview server
       try {
         const response = await fetch('/api/components/preview', {
           method: 'POST',
@@ -147,13 +159,13 @@ export default function VerificationQueuePage() {
       }
     }
 
-    startPreviewServer();
+    startPreview();
 
     return () => {
       mounted = false;
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [currentComponent?.id]);
+  }, [currentComponent?.id, currentComponent?.isStandaloneNextApp]);
 
   // Reset install state when component changes
   useEffect(() => {
@@ -169,7 +181,12 @@ export default function VerificationQueuePage() {
     { id: 'mobile', icon: Smartphone, width: '375px', label: 'Mobile' },
   ] as const;
 
-  const iframeSrc = previewStatus === 'ready' ? `${previewUrl}/extracted` : '';
+  // Intelligent iframe URL: standalone apps use /extracted, non-standalone use direct URL
+  const iframeSrc = previewStatus === 'ready'
+    ? currentComponent?.isStandaloneNextApp
+      ? `${previewUrl}/extracted`
+      : previewUrl
+    : '';
 
   // Handle approve
   async function handleApprove() {

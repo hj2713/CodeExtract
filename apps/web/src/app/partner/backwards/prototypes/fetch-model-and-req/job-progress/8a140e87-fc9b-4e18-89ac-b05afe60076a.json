@@ -1,0 +1,33 @@
+{
+  "jobId": "8a140e87-fc9b-4e18-89ac-b05afe60076a",
+  "name": "authentication-feature-extraction",
+  "status": "failed",
+  "stepProgress": [
+    {
+      "stepId": "create-nextjs",
+      "status": "completed"
+    },
+    {
+      "stepId": "create-folders",
+      "status": "completed"
+    },
+    {
+      "stepId": "clone-repo",
+      "status": "error",
+      "error": "Failed to clone repo: Cloning into '.'...\nremote: Repository not found.\nfatal: repository 'https://github.com/internal/codeextract/' not found\n"
+    },
+    {
+      "stepId": "copy-templates",
+      "status": "pending"
+    },
+    {
+      "stepId": "run-claude",
+      "status": "pending"
+    }
+  ],
+  "currentStep": "clone-repo",
+  "logs": "Cloning into '.'...\nremote: Repository not found.\nfatal: repository 'https://github.com/internal/codeextract/' not found\n",
+  "claudeStatus": "not_started",
+  "startedAt": "2026-02-01T19:13:00.586Z",
+  "completedAt": "2026-02-01T19:13:01.828Z"
+}

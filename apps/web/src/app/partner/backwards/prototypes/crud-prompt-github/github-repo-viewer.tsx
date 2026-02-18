@@ -131,11 +131,11 @@ export function GithubRepoViewer({
 	const [deleting, setDeleting] = useState(false);
 
 	// Must be a github_repo with github metadata
-	if (source.type !== "github_repo" || !source.github) {
+	if (source.type !== "github_repo" || !source.githubMetadata) {
 		return null;
 	}
 
-	const { owner, repo, stars, forks, defaultBranch, description } = source.github;
+	const { owner, repo, stars, forks, defaultBranch, description } = source.githubMetadata;
 	const hasMetadata = stars !== null;
 
 	async function handleEnrich() {

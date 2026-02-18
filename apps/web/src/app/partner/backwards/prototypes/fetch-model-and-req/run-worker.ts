@@ -2,27 +2,40 @@
 
 /**
  * Worker bootstrap script
- * Loads environment variables and sets correct working directory before importing worker
  *
- * Run from project root:
+ * Sets cwd to the monorepo root, loads env, then starts the polling worker.
+ *
+ * Run from anywhere:
  *   bun run apps/web/src/app/partner/backwards/prototypes/fetch-model-and-req/run-worker.ts
  */
 
 import dotenv from "dotenv";
 import path from "node:path";
 
-// Get the apps/web directory (6 levels up from this file)
+// apps/web directory (6 levels up from this file)
 const appsWebDir = path.resolve(import.meta.dirname, "../../../../../..");
 
-// Change to apps/web so relative DATABASE_URL works
-process.chdir(appsWebDir);
+// Project root (2 more levels up from apps/web)
+const projectRoot = path.resolve(appsWebDir, "../..");
 
-// Load .env from apps/web
+// Load .env from apps/web (has DATABASE_URL, API keys, etc.)
 dotenv.config({ path: path.join(appsWebDir, ".env") });
 
-console.log(`[BOOTSTRAP] Working directory: ${process.cwd()}`);
+// The DATABASE_URL is relative to apps/web, so we need to resolve it
+// before changing cwd to the project root.
+const rawDbUrl = process.env.DATABASE_URL ?? "";
+if (rawDbUrl.startsWith("file:")) {
+	const relativePath = rawDbUrl.replace("file:", "");
+	const absolutePath = path.resolve(appsWebDir, relativePath);
+	process.env.DATABASE_URL = `file:${absolutePath}`;
+}
+
+// Set cwd to project root — Claude SDK will operate here
+process.chdir(projectRoot);
+
+console.log(`[BOOTSTRAP] Project root (cwd): ${process.cwd()}`);
 console.log(`[BOOTSTRAP] DATABASE_URL: ${process.env.DATABASE_URL}`);
 
-// Now dynamically import and run the worker
+// Start the worker
 const worker = await import("./worker-main");
 await worker.run();

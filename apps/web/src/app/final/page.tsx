@@ -1,18 +1,32 @@
 'use client';
 
-/**
- * Final Page - Uses the terminal-inspired design system
- *
- * Design reference: apps/web/src/app/partner/gallery/approved/page.tsx
- * Design docs: ./components/design-system.md
- */
+import { useState } from 'react';
+import { Dock } from './components/dock';
+import { WorkingQueuePage } from './components/working-queue-page';
+import { PendingAppsPage } from './components/pending-apps-page';
 
-export default function FinalPage() {
+/**
+ * MainPage - Root layout with dock navigation
+ * 
+ * State:
+ * - activeTab: controls which page is displayed
+ */
+export default function MainPage() {
+  const [activeTab, setActiveTab] = useState<'working-queue' | 'pending-apps'>('working-queue');
+
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 px-6 py-4">
-      <div className="font-mono text-sm text-zinc-500">
-        final page placeholder
+    <div className="h-screen bg-zinc-950 text-zinc-100">
+      {/* Page Content Area - takes full screen */}
+      <div className="h-full overflow-hidden">
+        {activeTab === 'working-queue' ? (
+          <WorkingQueuePage />
+        ) : (
+          <PendingAppsPage />
+        )}
       </div>
+
+      {/* Dock - fixed at bottom center with margin */}
+      <Dock activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }

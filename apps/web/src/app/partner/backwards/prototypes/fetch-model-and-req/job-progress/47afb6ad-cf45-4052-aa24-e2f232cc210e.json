@@ -1,0 +1,33 @@
+{
+  "jobId": "47afb6ad-cf45-4052-aa24-e2f232cc210e",
+  "name": "extract-complete-authentication-flow",
+  "status": "failed",
+  "stepProgress": [
+    {
+      "stepId": "create-nextjs",
+      "status": "completed"
+    },
+    {
+      "stepId": "create-folders",
+      "status": "completed"
+    },
+    {
+      "stepId": "clone-repo",
+      "status": "error",
+      "error": "Failed to clone repo: Cloning into '.'...\nremote: Repository not found.\nfatal: repository 'https://github.com/example/auth-app/' not found\n"
+    },
+    {
+      "stepId": "copy-templates",
+      "status": "pending"
+    },
+    {
+      "stepId": "run-claude",
+      "status": "pending"
+    }
+  ],
+  "currentStep": "clone-repo",
+  "logs": "Cloning into '.'...\nremote: Repository not found.\nfatal: repository 'https://github.com/example/auth-app/' not found\n",
+  "claudeStatus": "not_started",
+  "startedAt": "2026-02-01T19:39:18.128Z",
+  "completedAt": "2026-02-01T19:39:19.598Z"
+}

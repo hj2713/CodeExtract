@@ -2,8 +2,8 @@
 
 import { readFile, writeFile } from "fs/promises";
 import path from "path";
+import { db, sources, type Source, eq } from "@my-better-t-app/db";
 import type {
-	Source,
 	CreateSourceInput,
 	UpdateSourceInput,
 	GithubMetadata,
@@ -12,7 +12,6 @@ import type {
 } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "src/app/partner/backwards/prototypes/crud-prompt-github");
-const SOURCES_FILE = path.join(DATA_DIR, "sources.json");
 const PROMPT_FILE = path.join(DATA_DIR, "prompt.md");
 
 // ============================================================================
@@ -33,23 +32,6 @@ function parseGithubUrl(url: string): { owner: string; repo: string } | null {
 
 function nowISO(): string {
 	return new Date().toISOString();
-}
-
-// ============================================================================
-// JSON "Database" Layer - Replace with Drizzle calls later
-// ============================================================================
-
-async function readSources(): Promise<Source[]> {
-	try {
-		const content = await readFile(SOURCES_FILE, "utf-8");
-		return JSON.parse(content);
-	} catch {
-		return [];
-	}
-}
-
-async function writeSources(sources: Source[]): Promise<void> {
-	await writeFile(SOURCES_FILE, JSON.stringify(sources, null, 2), "utf-8");
 }
 
 // ============================================================================
@@ -83,34 +65,42 @@ export async function createSource(input: CreateSourceInput): Promise<{
 	}
 
 	try {
-		const sources = await readSources();
-
 		// Check for duplicate GitHub repos
 		if (input.type === "github_repo" && github) {
-			const existing = sources.find(
-				(s) => s.type === "github_repo" && s.github?.owner === github?.owner && s.github?.repo === github?.repo
-			);
-			if (existing) {
+			const existing = await db
+				.select()
+				.from(sources)
+				.where(eq(sources.type, "github_repo"));
+
+			const duplicate = existing.find((s) => {
+				const meta = s.githubMetadata as GithubMetadata | null;
+				return meta?.owner === github?.owner && meta?.repo === github?.repo;
+			});
+
+			if (duplicate) {
 				return { success: false, error: "This repository has already been added" };
 			}
 		}
 
-		const now = nowISO();
-		const source: Source = {
-			id: crypto.randomUUID(),
-			type: input.type,
-			path: null,
-			originUrl: input.originUrl ?? null,
-			description: input.description,
-			analysisPath: null,
-			analysisConfirmed: false,
-			createdAt: now,
-			updatedAt: now,
-			github,
-		};
+		const now = new Date();
+		const id = crypto.randomUUID();
 
-		sources.push(source);
-		await writeSources(sources);
+		const [source] = await db
+			.insert(sources)
+			.values({
+				id,
+				name: github ? `${github.owner}/${github.repo}` : input.description,
+				type: input.type,
+				localPath: null,
+				originUrl: input.originUrl ?? null,
+				description: input.description,
+				analysisPath: null,
+				analysisConfirmed: false,
+				createdAt: now,
+				updatedAt: now,
+				githubMetadata: github,
+			})
+			.returning();
 
 		return { success: true, source };
 	} catch (error) {
@@ -119,12 +109,12 @@ export async function createSource(input: CreateSourceInput): Promise<{
 }
 
 export async function getSources(): Promise<Source[]> {
-	return readSources();
+	return db.select().from(sources);
 }
 
 export async function getSourceById(id: string): Promise<Source | null> {
-	const sources = await readSources();
-	return sources.find((s) => s.id === id) ?? null;
+	const [source] = await db.select().from(sources).where(eq(sources.id, id));
+	return source ?? null;
 }
 
 export async function updateSource(input: UpdateSourceInput): Promise<{
@@ -133,24 +123,25 @@ export async function updateSource(input: UpdateSourceInput): Promise<{
 	error?: string;
 }> {
 	try {
-		const sources = await readSources();
-		const index = sources.findIndex((s) => s.id === input.id);
-
-		if (index === -1) {
+		const existing = await getSourceById(input.id);
+		if (!existing) {
 			return { success: false, error: "Source not found" };
 		}
 
-		const updated: Source = {
-			...sources[index],
-			...(input.path !== undefined && { path: input.path }),
-			...(input.description !== undefined && { description: input.description }),
-			...(input.analysisPath !== undefined && { analysisPath: input.analysisPath }),
-			...(input.analysisConfirmed !== undefined && { analysisConfirmed: input.analysisConfirmed }),
-			updatedAt: nowISO(),
+		const updateData: Partial<typeof sources.$inferInsert> = {
+			updatedAt: new Date(),
 		};
 
-		sources[index] = updated;
-		await writeSources(sources);
+		if (input.localPath !== undefined) updateData.localPath = input.localPath;
+		if (input.description !== undefined) updateData.description = input.description;
+		if (input.analysisPath !== undefined) updateData.analysisPath = input.analysisPath;
+		if (input.analysisConfirmed !== undefined) updateData.analysisConfirmed = input.analysisConfirmed;
+
+		const [updated] = await db
+			.update(sources)
+			.set(updateData)
+			.where(eq(sources.id, input.id))
+			.returning();
 
 		return { success: true, source: updated };
 	} catch (error) {
@@ -163,14 +154,12 @@ export async function deleteSource(id: string): Promise<{
 	error?: string;
 }> {
 	try {
-		const sources = await readSources();
-		const filtered = sources.filter((s) => s.id !== id);
+		const result = await db.delete(sources).where(eq(sources.id, id)).returning();
 
-		if (filtered.length === sources.length) {
+		if (result.length === 0) {
 			return { success: false, error: "Source not found" };
 		}
 
-		await writeSources(filtered);
 		return { success: true };
 	} catch (error) {
 		return { success: false, error: String(error) };
@@ -186,44 +175,46 @@ export async function enrichGithubMetadata(sourceId: string): Promise<{
 	source?: Source;
 	error?: string;
 }> {
-	const sources = await readSources();
-	const index = sources.findIndex((s) => s.id === sourceId);
+	const source = await getSourceById(sourceId);
 
-	if (index === -1) {
+	if (!source) {
 		return { success: false, error: "Source not found" };
 	}
 
-	const source = sources[index];
-	if (source.type !== "github_repo" || !source.github) {
+	if (source.type !== "github_repo" || !source.githubMetadata) {
 		return { success: false, error: "Source is not a GitHub repository" };
 	}
 
-	const repoInfo = await fetchRepoInfo(source.github.owner, source.github.repo);
+	const meta = source.githubMetadata as GithubMetadata;
+	const repoInfo = await fetchRepoInfo(meta.owner, meta.repo);
+
 	if (!repoInfo.success || !repoInfo.data) {
 		return { success: false, error: repoInfo.error ?? "Failed to fetch repo info" };
 	}
 
-	const updated: Source = {
-		...source,
-		github: {
-			...source.github,
-			defaultBranch: repoInfo.data.default_branch,
-			description: repoInfo.data.description,
-			stars: repoInfo.data.stargazers_count,
-			forks: repoInfo.data.forks_count,
-			fetchedAt: nowISO(),
-		},
-		updatedAt: nowISO(),
+	const updatedMetadata: GithubMetadata = {
+		...meta,
+		defaultBranch: repoInfo.data.default_branch,
+		description: repoInfo.data.description,
+		stars: repoInfo.data.stargazers_count,
+		forks: repoInfo.data.forks_count,
+		fetchedAt: nowISO(),
 	};
 
-	sources[index] = updated;
-	await writeSources(sources);
+	const [updated] = await db
+		.update(sources)
+		.set({
+			githubMetadata: updatedMetadata,
+			updatedAt: new Date(),
+		})
+		.where(eq(sources.id, sourceId))
+		.returning();
 
 	return { success: true, source: updated };
 }
 
 // ============================================================================
-// Prompt CRUD (simple key-value for now)
+// Prompt CRUD (simple key-value stored in file for now)
 // ============================================================================
 
 export async function savePrompt(prompt: string): Promise<{ success: boolean; error?: string }> {
@@ -338,4 +329,5 @@ export async function fetchRepoContents(
 // Re-export types for convenience
 // ============================================================================
 
-export type { Source, CreateSourceInput, UpdateSourceInput, RepoContent, RepoInfo } from "./types";
+export type { Source } from "@my-better-t-app/db";
+export type { CreateSourceInput, UpdateSourceInput, RepoContent, RepoInfo } from "./types";

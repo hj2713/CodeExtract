@@ -1,0 +1,33 @@
+{
+  "jobId": "1b08bb83-aae1-4dfe-94b3-6397b6cb7ecd",
+  "name": "extract-animated-background-circles-component",
+  "status": "failed",
+  "stepProgress": [
+    {
+      "stepId": "create-nextjs",
+      "status": "completed"
+    },
+    {
+      "stepId": "create-folders",
+      "status": "completed"
+    },
+    {
+      "stepId": "clone-repo",
+      "status": "error",
+      "error": "Failed to clone repo: fatal: destination path '.' already exists and is not an empty directory.\n"
+    },
+    {
+      "stepId": "copy-templates",
+      "status": "pending"
+    },
+    {
+      "stepId": "run-claude",
+      "status": "pending"
+    }
+  ],
+  "currentStep": "clone-repo",
+  "logs": "fatal: destination path '.' already exists and is not an empty directory.\n",
+  "claudeStatus": "not_started",
+  "startedAt": "2026-02-01T19:16:49.064Z",
+  "completedAt": "2026-02-01T19:16:49.869Z"
+}

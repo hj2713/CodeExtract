@@ -20,6 +20,10 @@ interface InstallLog {
   [key: string]: unknown;
 }
 
+interface ComponentInfo {
+  isStandaloneNextApp: boolean;
+}
+
 export default function ComponentViewerPage() {
   const params = useParams();
   const router = useRouter();
@@ -29,6 +33,7 @@ export default function ComponentViewerPage() {
   const [previewStatus, setPreviewStatus] = useState<'loading' | 'starting' | 'ready' | 'error'>('loading');
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [componentInfo, setComponentInfo] = useState<ComponentInfo | null>(null);
 
   // Install Dependencies state
   const [installStatus, setInstallStatus] = useState<InstallStatus>('idle');
@@ -36,15 +41,34 @@ export default function ComponentViewerPage() {
   const [installError, setInstallError] = useState<string>('');
   const [showInstallLogs, setShowInstallLogs] = useState(false);
 
+  // Uses intelligent URL detection: standalone Next.js apps use preview API, simple page.tsx use main server
   useEffect(() => {
     let mounted = true;
     let pollInterval: NodeJS.Timeout;
 
-    async function startPreviewServer() {
+    async function startPreview() {
       try {
         setPreviewStatus('starting');
-        
-        // Start the preview server
+
+        // First, fetch component info to determine if it's standalone
+        const listRes = await fetch(`/api/components/list`);
+        const listData = await listRes.json();
+        const component = listData.components?.find((c: { id: string }) => c.id === componentId);
+
+        if (!mounted) return;
+
+        const isStandalone = component?.isStandaloneNextApp ?? true; // Default to standalone for backwards compat
+        setComponentInfo({ isStandaloneNextApp: isStandalone });
+
+        // Intelligent URL detection: non-standalone apps use the main server directly
+        if (!isStandalone) {
+          const directUrl = `http://localhost:3001/partner/backwards/prototypes/fetch-model-and-req/created-apps/${componentId}`;
+          setPreviewUrl(directUrl);
+          setPreviewStatus('ready');
+          return;
+        }
+
+        // Standalone apps: start preview server
         const response = await fetch('/api/components/preview', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -64,7 +88,7 @@ export default function ComponentViewerPage() {
         // Poll until server is ready
         pollInterval = setInterval(async () => {
           try {
-            const healthCheck = await fetch(`${data.url}/extracted`, { 
+            await fetch(`${data.url}/extracted`, {
               mode: 'no-cors'
             });
             if (mounted) {
@@ -84,15 +108,15 @@ export default function ComponentViewerPage() {
           }
         }, 8000);
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (mounted) {
           setPreviewStatus('error');
-          setErrorMessage(error.message);
+          setErrorMessage(error instanceof Error ? error.message : 'Unknown error');
         }
       }
     }
 
-    startPreviewServer();
+    startPreview();
 
     return () => {
       mounted = false;
@@ -100,7 +124,12 @@ export default function ComponentViewerPage() {
     };
   }, [componentId]);
 
-  const iframeSrc = previewStatus === 'ready' ? `${previewUrl}/extracted` : '';
+  // Intelligent iframe URL: standalone apps use /extracted, non-standalone use direct URL
+  const iframeSrc = previewStatus === 'ready'
+    ? componentInfo?.isStandaloneNextApp
+      ? `${previewUrl}/extracted`
+      : previewUrl
+    : '';
 
   const viewModes = [
     { id: 'desktop', icon: Monitor, width: '100%', label: 'Desktop' },
